@@ -5,6 +5,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import org.mockito.Mockito;
+import org.springframework.core.io.Resource;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.multipart.MultipartFile;
@@ -75,15 +76,21 @@ class LocalFileStorageStrategyTest {
     }
 
     @Test
-    void getFile_ExistingFile_ReturnsBytes() throws IOException {
+    void getFile_ExistingFile_ReturnsReadableResource() throws IOException {
         Path stored = tempDir.resolve("user-5");
         Files.createDirectories(stored);
         Path filePath = stored.resolve("hello.txt");
         Files.writeString(filePath, "hello world");
 
-        byte[] result = strategy.getFile("user-5/hello.txt");
+        Resource result = strategy.getFile("user-5/hello.txt");
 
-        assertThat(new String(result)).isEqualTo("hello world");
+        assertThat(result.exists()).isTrue();
+        assertThat(result.isReadable()).isTrue();
+        // try-with-resources: an unclosed stream holds a Windows file-handle
+        // lock that fails @TempDir's post-test directory cleanup.
+        try (var in = result.getInputStream()) {
+            assertThat(new String(in.readAllBytes())).isEqualTo("hello world");
+        }
     }
 
     @Test

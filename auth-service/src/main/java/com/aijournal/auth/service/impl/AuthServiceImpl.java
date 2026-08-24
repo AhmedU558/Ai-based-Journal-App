@@ -1,4 +1,5 @@
 package com.aijournal.auth.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.auth.dto.*;
 import com.aijournal.auth.entity.EmailVerificationToken;
@@ -51,7 +52,9 @@ import java.time.Instant;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -79,7 +82,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final TotpService totpService;
     private final TotpEncryptionService totpEncryptionService;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
     // Fire-and-forget executor for every best-effort call into
     // notification-service - keeping these off the calling thread means the
     // HTTP response returns before the background network call even starts,
@@ -88,9 +91,19 @@ public class AuthServiceImpl implements AuthService {
     // time to respond). Not Spring's @Async: these are private same-class
     // methods, so AOP self-invocation would silently never intercept them.
     // Swapped for a synchronous Runnable::run executor in tests.
-    private Executor notificationExecutor = Executors.newCachedThreadPool();
+    // Bounded (not Executors.newCachedThreadPool(), which allows up to
+    // Integer.MAX_VALUE threads) - a login/registration surge could
+    // otherwise spawn unboundedly many threads, one per best-effort
+    // notification call, until the JVM runs out of native threads.
+    // CallerRunsPolicy means saturation degrades to synchronous execution
+    // on the calling thread rather than throwing or dropping the
+    // notification.
+    private Executor notificationExecutor = new ThreadPoolExecutor(
+            2, 10, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
-    @Value("${jwt.secret:defaultSecretKeyForTestingJwtTokenValidation1234567890}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${jwt.expiration-ms:900000}") // 15 mins default

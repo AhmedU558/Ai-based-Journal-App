@@ -1,138 +1,31 @@
-import json
 import os
 import re
+
 import requests
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
+import ai_providers
+from ai_providers import (
+    gemini_generate,
+    gemini_chat_reply,
+    anthropic_chat_reply,
+    gemini_summary,
+    gemini_mood,
+    gemini_tags,
+)
+from constants import MOOD_EMOJI_MAP, MAX_INPUT_LENGTH, too_long
+from heuristics import detect_mood_keywords, keyword_chat_reply, POSITIVE_SENTIMENT_WORDS, NEGATIVE_SENTIMENT_WORDS
+
 app = Flask(__name__)
 CORS(app)
 
-MOOD_EMOJI_MAP = {
-    "HAPPY": "😊",
-    "EXCITED": "🤩",
-    "RELAXED": "😌",
-    "STRESSED": "😰",
-    "SAD": "🥺",
-    "GRATEFUL": "🙏",
-    "ANGRY": "😠",
-    "NEUTRAL": "😐"
-}
-
 HF_API_KEY = os.environ.get("HUGGINGFACE_API_KEY", "")
 
-# Real conversational AI for /chat, preferred over the HuggingFace DialoGPT
-# path and the keyword-canned fallback below it - both of those are what
-# produced the actual bug this was built to fix: casual messages with no
-# specific mood/topic keyword in them (most conversation) all fell into the
-# same "HAPPY" bucket and got a byte-identical canned reply back, over and
-# over, regardless of what was actually said. A real LLM actually
-# understands the request instead of pattern-matching it. Two providers are
-# supported - Gemini is tried first (it's the one actually configured/used
-# today), Claude second (built out but not currently configured) - same
-# graceful multi-tier fallback shape the HF/keyword tiers below already use.
-GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
-# "gemini-flash-latest" resolves to a full "-flash" tier model, whose free
-# tier is capped at only 20 requests/day/project (confirmed live via a real
-# 429 RESOURCE_EXHAUSTED response after this platform's own testing burned
-# through it in one session) - "-lite" tier models are on a separate,
-# meaningfully higher free-tier quota bucket (confirmed live: still
-# returning 200s immediately after the full-tier model's daily quota was
-# exhausted), and are more than capable for a short conversational reply or
-# a rephrase/grammar/tag/mood-classification task.
-# `or` here, not os.environ.get(key, default)'s own fallback arg - that arg
-# only kicks in when the key is entirely ABSENT, but docker-compose's
-# ${GEMINI_MODEL:-} passes a real, present, empty-string env var into the
-# container whenever it's unset in .env, which .get()'s default silently
-# never catches. Confirmed live: this exact gap made every Gemini call
-# request the URL ".../models/:generateContent" (empty model segment),
-# which fails, so every /chat and rephrase/grammar/tags/summarize/mood call
-# silently fell through to its fallback tier - not a transient/quota issue,
-# a real bug in how the env var's absence was checked.
-GEMINI_MODEL = os.environ.get("GEMINI_MODEL") or "gemini-flash-lite-latest"
-ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "")
-ANTHROPIC_MODEL = os.environ.get("ANTHROPIC_MODEL") or "claude-haiku-4-5-20251001"
-CHAT_SYSTEM_PROMPT = (
-    "You are the AI Writing & Wellness Companion inside Mindora, a journaling app. "
-    "You help the user reflect on their day, process emotions, build a journaling habit, "
-    "and improve their writing (rephrasing, grammar, continuing a passage) when asked. "
-    "Be warm and specific to what the user actually wrote - never generic or repetitive. "
-    "Keep replies conversational and concise (2-5 sentences) unless the user's request "
-    "genuinely needs more (e.g. a rewritten passage, multiple prompts)."
-)
-
-# Keywords confirmed to also be a literal PREFIX of a common, unrelated
-# English word - e.g. "mad" (meant to catch anger) is the first three
-# letters of "made", so naive substring matching silently misclassified any
-# entry containing that extremely common word as ANGRY. These need a
-# right-side word boundary too (an exact-word match); every other keyword
-# below only gets a left-side boundary so it keeps matching its natural
-# inflections (e.g. "stress" -> "stressed"/"stressful").
-_EXACT_WORD_KEYWORDS = {'mad', 'spa', 'soft', 'won', 'trip'}
-
-def _keyword_matches(keyword: str, content: str) -> bool:
-    if ' ' in keyword:
-        # Multi-word phrases can't realistically collide mid-word.
-        return keyword in content
-    pattern = r'\b' + re.escape(keyword) + (r'\b' if keyword in _EXACT_WORD_KEYWORDS else '')
-    return re.search(pattern, content) is not None
-
-def _any_keyword(keywords, content: str) -> bool:
-    return any(_keyword_matches(k, content) for k in keywords)
-
-# Shared keyword-based mood classifier - the single source of truth for the
-# non-HF fallback used by both /mood and /chat, so a chat reply's tone always
-# agrees with what /mood would have detected for the same text.
-def detect_mood_keywords(content: str) -> str:
-    content = content.lower()
-    if _any_keyword(['angry', 'furious', 'mad', 'rage', 'infuriated', 'irritated', 'annoyed', 'hate', 'outraged', 'bitter', 'disgusted'], content):
-        return "ANGRY"
-    if _any_keyword(['stress', 'overwhelmed', 'deadline', 'panic', 'crashed', 'anxious', 'pressure', 'workload', 'frantic', 'trouble', 'meetings', 'no time', 'broke down', 'worrying', 'urgent', 'argument', 'conflict', 'piling up', 'uninterrupted', 'interruption', 'balance work demands', 'frustat', 'frustrat', 'tired', 'exhausted', 'drained', 'burnout', 'fatigue', 'heavy load', 'feely really'], content):
-        return "STRESSED"
-    if _any_keyword(['ruin', 'ruined', 'ruinned', 'bad person', 'terrible', 'horrible', 'upset', 'worst', 'sad', 'lonely', 'grief', 'tears', 'disappoint', 'gloomy', 'hurt', 'melanchol', 'sorrow', 'missing', 'down and', 'heartbroken', 'left out', 'heavy-hearted', 'hurting'], content):
-        return "SAD"
-    if _any_keyword(['thankful', 'grateful', 'blessed', 'apprec', 'gratitude', 'blessings', 'appreciation'], content):
-        return "GRATEFUL"
-    if _any_keyword(['relax', 'calm', 'peaceful', 'serene', 'tranquil', 'meditat', 'cozy', 'spa', 'lake', 'sunset', 'soft', 'reading a book', 'sipping tea', 'unplugged', 'stillness', 'lazy sunday', 'resting', 'yoga', 'breeze', 'soothing', 'oak tree', 'nature sound', 'restful', 'no deadlines', 'listening to classical', 'zero stress'], content):
-        return "RELAXED"
-    if _any_keyword(['excit', 'hyped', 'thrill', "can't wait", 'launch', 'trip', 'concert', 'exhilarat', 'eager', 'won', 'signed', 'promotion', 'hackathon', 'unbox', 'wedding', 'game winning', 'festival', ' summit', 'road trip', 'developer workshop', 'celebrating with'], content):
-        return "EXCITED"
-    return "HAPPY"
 
 @app.route('/health', methods=['GET'])
 def health():
     return jsonify({"status": "UP", "service": "python-ai-service", "hf_online": bool(HF_API_KEY)}), 200
-
-def _gemini_summary(content: str):
-    """Returns a validated {shortSummary, detailedSummary, bulletPoints} dict,
-    or None on any failure so the caller falls through to the existing real
-    (HF or sentence-extraction) fallback."""
-    raw = gemini_generate(
-        "You summarize journal entries. Reply with ONLY a JSON object of the shape "
-        '{"shortSummary": "one sentence", "detailedSummary": "2-3 sentences", '
-        '"bulletPoints": ["point 1", "point 2", "point 3"]}. No other text.',
-        content,
-        json_response=True,
-    )
-    if not raw:
-        return None
-    try:
-        parsed = json.loads(raw)
-    except Exception:
-        return None
-    if not isinstance(parsed, dict):
-        return None
-    short_s = parsed.get('shortSummary')
-    detailed_s = parsed.get('detailedSummary')
-    bullets = parsed.get('bulletPoints')
-    if not isinstance(short_s, str) or not short_s.strip():
-        return None
-    if not isinstance(detailed_s, str) or not detailed_s.strip():
-        detailed_s = short_s
-    if not isinstance(bullets, list) or not bullets:
-        bullets = [short_s]
-    bullets = [f"• {b}" if not str(b).startswith('•') else str(b) for b in bullets if str(b).strip()]
-    return {"shortSummary": short_s, "detailedSummary": detailed_s, "bulletPoints": bullets}
 
 
 @app.route('/api/v1/ai/summarize', methods=['POST'])
@@ -141,13 +34,15 @@ def summarize():
     content = data.get('content', '')
     if not content:
         return jsonify({"success": False, "message": "Content is required"}), 400
+    if too_long(content):
+        return jsonify({"success": False, "message": f"Content exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
-    gemini_summary = _gemini_summary(content)
-    if gemini_summary:
+    result = gemini_summary(content)
+    if result:
         return jsonify({
             "success": True,
             "message": "Summary generated via Google Gemini",
-            "data": {**gemini_summary, "provider": "google-gemini"}
+            "data": {**result, "provider": "google-gemini"}
         }), 200
 
     if HF_API_KEY:
@@ -169,8 +64,8 @@ def summarize():
                             "provider": "huggingface-bart"
                         }
                     }), 200
-        except Exception:
-            pass
+        except Exception as e:
+            app.logger.warning("summarize: HuggingFace bart-large-cnn call failed: %s", e)
 
     sentences = [s.strip() for s in re.split(r'[.!?]+', content) if s.strip()]
     if not sentences:
@@ -193,39 +88,6 @@ def summarize():
         }
     }), 200
 
-_VALID_MOODS = set(MOOD_EMOJI_MAP.keys()) - {"NEUTRAL"}  # NEUTRAL is the no-data placeholder, never a real detection
-
-
-def _gemini_mood(content: str):
-    """Returns a validated (mood, confidence) tuple, or None on any failure -
-    including a model reply that isn't one of the fixed mood labels this
-    platform persists (mood_history.primary_mood is a closed set), so the
-    caller always falls through to the existing real (HF or keyword-pattern)
-    fallback rather than ever persisting an invalid/hallucinated label."""
-    raw = gemini_generate(
-        "You classify the dominant emotion in a journal entry. Reply with ONLY a JSON "
-        'object of the shape {"mood": "HAPPY", "confidence": 0.9} where "mood" is '
-        'EXACTLY one of: HAPPY, EXCITED, RELAXED, STRESSED, SAD, GRATEFUL, ANGRY. '
-        '"confidence" is a number from 0 to 1. No other text.',
-        content,
-        json_response=True,
-    )
-    if not raw:
-        return None
-    try:
-        parsed = json.loads(raw)
-    except Exception:
-        return None
-    if not isinstance(parsed, dict):
-        return None
-    detected_mood = str(parsed.get('mood', '')).upper()
-    if detected_mood not in _VALID_MOODS:
-        return None
-    confidence = parsed.get('confidence')
-    if not isinstance(confidence, (int, float)) or not (0 <= confidence <= 1):
-        confidence = 0.9
-    return detected_mood, float(confidence)
-
 
 # 2. Real-time Gemini/HuggingFace/Pattern AI Mood Engine with ANGRY support
 @app.route('/api/v1/ai/mood', methods=['POST'])
@@ -234,8 +96,10 @@ def mood():
     content = data.get('content', '').lower()
     if not content:
         return jsonify({"success": False, "message": "Content is required"}), 400
+    if too_long(content):
+        return jsonify({"success": False, "message": f"Content exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
-    gemini_result = _gemini_mood(content)
+    gemini_result = gemini_mood(content)
     if gemini_result:
         detected_mood, confidence = gemini_result
         return jsonify({
@@ -275,8 +139,8 @@ def mood():
                             "provider": "huggingface-distilbert"
                         }
                     }), 200
-        except Exception:
-            pass
+        except Exception as e:
+            app.logger.warning("mood: HuggingFace distilbert call failed: %s", e)
 
     # Pattern Matching Rules including ANGRY category
     primary_mood = detect_mood_keywords(content)
@@ -293,14 +157,6 @@ def mood():
         }
     }), 200
 
-# Independent word lists from /mood's mood-category lists, scoped specifically
-# to sentiment polarity (positive/negative), not mood category.
-POSITIVE_SENTIMENT_WORDS = ['happy', 'glad', 'great', 'good', 'love', 'excited', 'grateful',
-    'thankful', 'wonderful', 'amazing', 'joy', 'proud', 'relaxed', 'calm', 'peaceful',
-    'blessed', 'hopeful', 'excellent', 'fantastic', 'awesome', 'enjoy', 'delighted']
-NEGATIVE_SENTIMENT_WORDS = ['sad', 'angry', 'upset', 'terrible', 'horrible', 'hate', 'furious',
-    'stressed', 'anxious', 'worried', 'awful', 'bad', 'miserable', 'lonely', 'hurt',
-    'disappointed', 'frustrated', 'exhausted', 'overwhelmed', 'grief', 'tears', 'worst']
 
 # 2b. Real-time Sentiment Polarity Engine - a distinct classification from
 # /mood (mood category vs. simple positive/negative/neutral polarity), used to
@@ -312,6 +168,8 @@ def sentiment():
     content = data.get('content', '').lower()
     if not content:
         return jsonify({"success": False, "message": "Content is required"}), 400
+    if too_long(content):
+        return jsonify({"success": False, "message": f"Content exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
     if HF_API_KEY:
         try:
@@ -331,8 +189,8 @@ def sentiment():
                             "provider": "huggingface-distilbert"
                         }
                     }), 200
-        except Exception:
-            pass
+        except Exception as e:
+            app.logger.warning("sentiment: HuggingFace distilbert call failed: %s", e)
 
     positive_hits = sum(1 for w in POSITIVE_SENTIMENT_WORDS if w in content)
     negative_hits = sum(1 for w in NEGATIVE_SENTIMENT_WORDS if w in content)
@@ -361,6 +219,7 @@ def sentiment():
         }
     }), 200
 
+
 # 3. Real-time AI Rephrasing Engine
 @app.route('/api/v1/ai/rephrase', methods=['POST'])
 def rephrase():
@@ -368,6 +227,8 @@ def rephrase():
     text = data.get('content', '') or data.get('text', '')
     if not text:
         return jsonify({"success": False, "message": "Text is required"}), 400
+    if too_long(text):
+        return jsonify({"success": False, "message": f"Text exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
     # Real rephrasing via Gemini, tried first - the previous fallback below
     # was fully fake: a fixed "I am experiencing significant frustration..."
@@ -395,6 +256,7 @@ def rephrase():
         }
     }), 200
 
+
 # 4. Real-time AI Grammar & Spelling Corrector
 @app.route('/api/v1/ai/grammar', methods=['POST'])
 def grammar():
@@ -402,6 +264,8 @@ def grammar():
     text = data.get('content', '') or data.get('text', '')
     if not text:
         return jsonify({"success": False, "message": "Text is required"}), 400
+    if too_long(text):
+        return jsonify({"success": False, "message": f"Text exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
     # Real grammar correction via Gemini, tried first - the fallback below
     # only ever fixes 6 specific hardcoded typos, silently leaving every
@@ -438,216 +302,6 @@ def grammar():
         }
     }), 200
 
-# Mood-aware canned replies for the non-HF chat fallback - one genuinely
-# different, relevant response per detected mood, instead of a single
-# template that echoed the same advice back for every message regardless of
-# what was actually said (the bug: "hello" and a real venting message both
-# got the identical "take a walk / 5 deep breaths" reply).
-CHAT_REPLIES_BY_MOOD = {
-    "ANGRY": "It sounds like something's really frustrating you right now. Try naming exactly what triggered it in a few sentences - putting it into words often takes the edge off, and you can revisit it once you're calmer.",
-    "STRESSED": "That sounds like a lot to carry. Try breaking down what's overwhelming you into 2-3 concrete next steps, and give yourself permission to tackle just one of them today.",
-    "SAD": "I'm sorry you're going through that. Writing about what's weighing on you, even just a few honest lines, can help you process it. Is there one small thing that might bring a bit of comfort right now?",
-    "GRATEFUL": "It's great that you're noticing the good things. Try jotting down exactly why this moment mattered to you - specific details make gratitude entries much more powerful to look back on.",
-    "RELAXED": "Sounds like a calm moment - a good time to reflect. What's one thing from today you'd like to remember or build on?",
-    "EXCITED": "That's exciting! Capture the details now while the energy's fresh - what led up to this, and what are you looking forward to next?",
-    "HAPPY": "That's good to hear. What made this feel good? Writing it down helps reinforce what's working for you.",
-}
-
-# Topic-based replies checked before mood classification - the mood-only
-# fallback above only ever answers "how do you feel", so a functional request
-# with no mood keyword in it (e.g. the app's own ChatScreen/AIChatView preset
-# prompt buttons: "Suggest 3 daily journal prompts...", "How can I build a
-# consistent daily writing habit?") always fell through to the generic HAPPY
-# reply regardless of what was actually asked - found live via a screenshot
-# of exactly that mismatch. Each entry is (trigger keywords, real answer).
-TOPIC_CHAT_REPLIES = [
-    (
-        ['journal prompt', 'writing prompt', 'what should i write', 'give me a prompt', 'prompt idea'],
-        "Here are 3 prompts to try: 1) What moment today would you want to remember a year from now, and why? "
-        "2) What's something you're avoiding thinking about, and what would happen if you wrote about it for five minutes? "
-        "3) Describe your current mood as if it were weather - what's the forecast for tomorrow?"
-    ),
-    (
-        ['writing habit', 'consistent daily', 'journal every day', 'journal daily', 'build a habit', 'stay consistent'],
-        "Building a daily writing habit works best when you lower the bar: commit to 3 sentences a minute, same time each day "
-        "(right after coffee or before bed are easiest to anchor to). Skip trying to write something 'good' - the goal for the "
-        "first few weeks is just showing up, not quality. A short streak you can see (even just counting days) helps more than "
-        "long entries you dread starting."
-    ),
-    (
-        ['how do i start journaling', 'new to journaling', "don't know what to write", 'writing block', "can't think of anything"],
-        "A good way to start: pick one moment from today - a conversation, a small win, a frustration - and just describe what "
-        "happened and how it made you feel, in plain language. Don't worry about structure or where it's going; the goal is to "
-        "get something real on the page, not to write well."
-    ),
-]
-
-
-def topic_chat_reply(query: str, context: str):
-    combined = f"{query} {context}".lower()
-    for keywords, reply in TOPIC_CHAT_REPLIES:
-        if any(k in combined for k in keywords):
-            return reply
-    return None
-
-
-def keyword_chat_reply(query: str, context: str) -> str:
-    topic_reply = topic_chat_reply(query, context)
-    if topic_reply:
-        return topic_reply
-    combined = f"{query} {context}".strip()
-    mood = detect_mood_keywords(combined) if combined else "HAPPY"
-    return CHAT_REPLIES_BY_MOOD.get(mood, CHAT_REPLIES_BY_MOOD["HAPPY"])
-
-
-def gemini_generate(system_prompt: str, user_prompt: str, json_response: bool = False):
-    """Single-turn real generation via Gemini, for the non-chat editor
-    features (rephrase/grammar/tags/summarize/mood) - each of those makes one
-    isolated request, unlike /chat's multi-turn conversation. Returns the raw
-    text (never raises) or None if GEMINI_API_KEY is unset or the call fails,
-    so every caller can fall through to its existing real (non-Gemini)
-    fallback exactly as before. json_response=True asks Gemini to return a
-    JSON string in that text - still just a string here, the caller parses
-    it and must validate before trusting any of it, same as any other
-    caller-supplied data."""
-    if not GEMINI_API_KEY:
-        return None
-    try:
-        payload = {
-            "systemInstruction": {"parts": [{"text": system_prompt}]},
-            "contents": [{"role": "user", "parts": [{"text": user_prompt}]}],
-        }
-        if json_response:
-            payload["generationConfig"] = {"responseMimeType": "application/json"}
-        res = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent",
-            headers={
-                "Content-Type": "application/json",
-                "X-goog-api-key": GEMINI_API_KEY,
-            },
-            json=payload,
-            timeout=20,
-        )
-        if res.status_code != 200:
-            # Logged, not silently swallowed - a caught-but-invisible failure
-            # here is exactly what made an earlier real bug (an env var
-            # silently resolving empty) undiagnosable from `docker logs`
-            # alone, and this is also where a real live quota/outage (a real
-            # 429/503 from Gemini's side) surfaces.
-            app.logger.warning("gemini_generate: %s returned %s: %s", GEMINI_MODEL, res.status_code, res.text[:300])
-            return None
-        out = res.json()
-        candidates = out.get('candidates') or []
-        if not candidates:
-            app.logger.warning("gemini_generate: no candidates in response")
-            return None
-        parts = candidates[0].get('content', {}).get('parts') or []
-        text = "".join(p.get('text', '') for p in parts).strip()
-        return text or None
-    except Exception as e:
-        app.logger.warning("gemini_generate: request failed: %s", e)
-        return None
-
-
-def gemini_chat_reply(query: str, context: str, history: list):
-    """Real generative reply via Google's Gemini API. Returns None (never
-    raises) on any failure so the caller can fall through to the next tier -
-    same graceful-degradation contract every other HF-backed branch in this
-    file already follows."""
-    try:
-        system_prompt = CHAT_SYSTEM_PROMPT
-        if context:
-            system_prompt += f"\n\nRecent excerpts from the user's own journal, for context (do not quote them verbatim unless asked):\n{context}"
-
-        # Gemini uses "model" for the assistant's own turns, not "assistant" -
-        # the history this function receives uses the same role names as the
-        # Anthropic-shaped fallback below (and the rest of this platform), so
-        # it's translated here rather than pushing a Gemini-specific role
-        # name up through the Java layer and both clients.
-        contents = []
-        for turn in history or []:
-            role = turn.get('role')
-            content = turn.get('content')
-            if role == 'user' and content:
-                contents.append({"role": "user", "parts": [{"text": content}]})
-            elif role == 'assistant' and content:
-                contents.append({"role": "model", "parts": [{"text": content}]})
-        contents.append({"role": "user", "parts": [{"text": query}]})
-
-        res = requests.post(
-            f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent",
-            headers={
-                "Content-Type": "application/json",
-                "X-goog-api-key": GEMINI_API_KEY,
-            },
-            json={
-                "systemInstruction": {"parts": [{"text": system_prompt}]},
-                "contents": contents,
-            },
-            timeout=20,
-        )
-        if res.status_code != 200:
-            app.logger.warning("gemini_chat_reply: %s returned %s: %s", GEMINI_MODEL, res.status_code, res.text[:300])
-            return None
-        out = res.json()
-        candidates = out.get('candidates') or []
-        if not candidates:
-            app.logger.warning("gemini_chat_reply: no candidates in response")
-            return None
-        parts = candidates[0].get('content', {}).get('parts') or []
-        # Some Gemini models attach a "thoughtSignature" (an internal
-        # reasoning trace) alongside the real "text" field on the same part -
-        # only the text is a real reply to show the user.
-        text = "".join(p.get('text', '') for p in parts).strip()
-        return text or None
-    except Exception as e:
-        app.logger.warning("gemini_chat_reply: request failed: %s", e)
-        return None
-
-
-def anthropic_chat_reply(query: str, context: str, history: list):
-    """Real generative reply via Claude's Messages API. Returns None (never
-    raises) on any failure so the caller can fall through to the next tier -
-    same graceful-degradation contract every other HF-backed branch in this
-    file already follows."""
-    try:
-        system_prompt = CHAT_SYSTEM_PROMPT
-        if context:
-            system_prompt += f"\n\nRecent excerpts from the user's own journal, for context (do not quote them verbatim unless asked):\n{context}"
-
-        messages = []
-        for turn in history or []:
-            role = turn.get('role')
-            content = turn.get('content')
-            if role in ('user', 'assistant') and content:
-                messages.append({"role": role, "content": content})
-        messages.append({"role": "user", "content": query})
-
-        res = requests.post(
-            "https://api.anthropic.com/v1/messages",
-            headers={
-                "x-api-key": ANTHROPIC_API_KEY,
-                "anthropic-version": "2023-06-01",
-                "content-type": "application/json",
-            },
-            json={
-                "model": ANTHROPIC_MODEL,
-                "max_tokens": 500,
-                "system": system_prompt,
-                "messages": messages,
-            },
-            timeout=20,
-        )
-        if res.status_code != 200:
-            app.logger.warning("anthropic_chat_reply: %s returned %s: %s", ANTHROPIC_MODEL, res.status_code, res.text[:300])
-            return None
-        out = res.json()
-        blocks = out.get('content') or []
-        text = "".join(b.get('text', '') for b in blocks if b.get('type') == 'text').strip()
-        return text or None
-    except Exception as e:
-        app.logger.warning("anthropic_chat_reply: request failed: %s", e)
-        return None
 
 # 5. Real-time Conversational AI & Writing Assistant Chat
 @app.route('/api/v1/ai/chat', methods=['POST'])
@@ -658,16 +312,18 @@ def chat():
     history = data.get('history') or []
     if not query:
         return jsonify({"success": False, "message": "Query is required"}), 400
+    if too_long(query, context):
+        return jsonify({"success": False, "message": f"Query/context exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
     q_lower = query.lower()
 
     provider = "python-ai"
     ai_reply = None
-    if GEMINI_API_KEY:
+    if ai_providers.GEMINI_API_KEY:
         ai_reply = gemini_chat_reply(query, context, history)
         if ai_reply:
             provider = "google-gemini"
-    if not ai_reply and ANTHROPIC_API_KEY:
+    if not ai_reply and ai_providers.ANTHROPIC_API_KEY:
         ai_reply = anthropic_chat_reply(query, context, history)
         if ai_reply:
             provider = "anthropic-claude"
@@ -696,8 +352,8 @@ def chat():
                         if generated:
                             ai_reply = generated.strip()
                             provider = "huggingface-dialogpt"
-                except Exception:
-                    pass
+                except Exception as e:
+                    app.logger.warning("chat: HuggingFace DialoGPT call failed: %s", e)
             if not ai_reply:
                 ai_reply = keyword_chat_reply(query, context)
 
@@ -711,30 +367,6 @@ def chat():
         }
     }), 200
 
-def _gemini_tags(content: str):
-    """Returns a validated list of up to 5 lowercase keyword strings, or None
-    on any failure (unset key, request failure, malformed/non-list JSON) so
-    the caller falls through to the real word-frequency fallback - a model's
-    JSON output is caller-supplied data like any other and must be validated
-    before use, not trusted blindly."""
-    raw = gemini_generate(
-        "You extract 3-5 short topic keywords from a journal entry, for use as hashtags. "
-        'Reply with ONLY a JSON array of lowercase strings, e.g. ["work","travel","family"]. '
-        "No other text.",
-        content,
-        json_response=True,
-    )
-    if not raw:
-        return None
-    try:
-        parsed = json.loads(raw)
-    except Exception:
-        return None
-    if not isinstance(parsed, list):
-        return None
-    keywords = [str(k).strip().lower() for k in parsed if isinstance(k, (str, int, float)) and str(k).strip()]
-    return keywords[:5] or None
-
 
 @app.route('/api/v1/ai/tags', methods=['POST'])
 def tags():
@@ -742,8 +374,10 @@ def tags():
     content = data.get('content', '')
     if not content:
         return jsonify({"success": False, "message": "Content is required"}), 400
+    if too_long(content):
+        return jsonify({"success": False, "message": f"Content exceeds the {MAX_INPUT_LENGTH}-character limit"}), 400
 
-    keywords = _gemini_tags(content)
+    keywords = gemini_tags(content)
     provider = "google-gemini"
     if not keywords:
         words = re.findall(r'\b[a-zA-Z]{4,}\b', content.lower())
@@ -761,6 +395,7 @@ def tags():
             "provider": provider
         }
     }), 200
+
 
 @app.route('/api/v1/ai/recommendations', methods=['POST'])
 def recommendations():
@@ -789,6 +424,7 @@ def recommendations():
             "provider": "python-ai"
         }
     }), 200
+
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))

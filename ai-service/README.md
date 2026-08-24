@@ -1,6 +1,6 @@
 # ai-service
 
-Java-side proxy for AI features. Delegates the actual NLP work to `python-ai-service` over HTTP via `FlaskAiStrategy` (the active strategy by default); `MockAiStrategy` is a canned-response fallback used when `ai.provider` isn't `flask`. Spring AI's `OpenAiAutoConfiguration` is explicitly excluded - despite the `spring-ai-bom` import in the root POM and a placeholder `spring.ai.openai.api-key`, no OpenAI/Claude/Gemini/Ollama integration actually exists in this codebase today.
+Java-side proxy for AI features. Delegates the actual NLP work to `python-ai-service` over HTTP via `FlaskAiStrategy` (the active strategy by default); `MockAiStrategy` is a canned-response fallback used when `ai.provider` isn't `flask`. (The `spring-ai-bom`/`spring-ai-openai-spring-boot-starter` dependency this service used to carry was removed - it was never actually used, and `python-ai-service` is where the real Gemini/Claude integration lives.)
 
 **Port:** 8084
 **Database:** MySQL, schema `ai_db` (Flyway-managed)
@@ -27,13 +27,10 @@ Java-side proxy for AI features. Delegates the actual NLP work to `python-ai-ser
 | POST | `/api/v1/ai/recommendations` | Context-aware recommendations |
 | POST | `/api/v1/ai/tags` | Auto-generate tags |
 | POST | `/api/v1/ai/chat` | Chat over journal history |
-| POST | `/api/v1/ai/habits` | Habit detection |
-| POST | `/api/v1/ai/goals` | Extract & track goals |
-| POST | `/api/v1/ai/sentiment` | Sentiment analysis |
-| POST | `/api/v1/ai/writing-improvements` | Grammar/clarity/vocabulary suggestions |
-| POST | `/api/v1/ai/daily-reflection` | Daily reflection questions |
 | POST | `/api/v1/ai/rephrase` | Rephrase text (proxies to `python-ai-service`) |
 | POST | `/api/v1/ai/grammar` | Fix grammar/spelling (proxies to `python-ai-service`) |
+
+`habits`/`goals`/`sentiment`/`writing-improvements`/`daily-reflection` were previously documented here but never actually existed as `ai-service` routes - `habits`/`goals`/`writing-improvements`/`daily-reflection` were fully hardcoded pseudo-AI endpoints removed in an earlier bug-hunt phase (Phase 22), and `sentiment` classification is real but only used internally by `detectAndSaveMood()` via `AiProviderStrategy.analyzeSentiment()` - it was never exposed as its own controller endpoint.
 
 ## Run standalone
 

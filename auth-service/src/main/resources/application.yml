@@ -26,6 +26,13 @@ jwt:
   expiration-ms: 900000
   refresh-expiration-ms: 604800000
 
+# The refresh-token cookie's Secure flag - real HTTPS in prod (default true),
+# overridden to false only in local Docker dev where the whole stack runs
+# over plain HTTP and a Secure cookie would silently never be sent.
+auth:
+  cookie:
+    secure: ${AUTH_COOKIE_SECURE:true}
+
 totp:
   encryption-key: ${TOTP_ENCRYPTION_KEY:?TOTP_ENCRYPTION_KEY must be set - copy .env.example to .env and fill it in}
 

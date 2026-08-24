@@ -103,7 +103,7 @@ export default function CalendarView({ onSelectJournal }: CalendarViewProps) {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[2rem] font-extrabold">Mood Calendar & Timeline</h1>
-          <p className="text-[#94a3b8] text-[0.9rem]">Visual emotional tracking mapped across calendar days</p>
+          <p className="text-[var(--text-secondary)] text-[0.9rem]">Visual emotional tracking mapped across calendar days</p>
         </div>
         <div className="flex items-center gap-3">
           <button
@@ -114,7 +114,7 @@ export default function CalendarView({ onSelectJournal }: CalendarViewProps) {
           >
             <ChevronLeft size={18} />
           </button>
-          <span className="text-[1.1rem] font-bold text-[#f8fafc] min-w-[140px] text-center">
+          <span className="text-[1.1rem] font-bold text-[var(--text-primary)] min-w-[140px] text-center">
             {MONTH_NAMES[month]} {year}
           </span>
           <button onClick={nextMonth} title="Next month" className="btn-secondary p-2">
@@ -137,7 +137,7 @@ export default function CalendarView({ onSelectJournal }: CalendarViewProps) {
       ) : (
         !error && (
           <div className="glass-panel p-7">
-            <div className="grid grid-cols-7 gap-3 text-center font-semibold text-[#94a3b8] mb-4 text-[0.85rem]">
+            <div className="grid grid-cols-7 gap-3 text-center font-semibold text-[var(--text-secondary)] mb-4 text-[0.85rem]">
               <span>Sun</span><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span>
             </div>
 
@@ -158,10 +158,10 @@ export default function CalendarView({ onSelectJournal }: CalendarViewProps) {
                       'h-20 rounded-xl p-2 flex flex-col justify-between transition-all duration-200',
                       journalForDay
                         ? 'bg-[rgba(99,102,241,0.18)] border border-[rgba(99,102,241,0.4)] cursor-pointer'
-                        : 'bg-white/[0.03] border border-white/5 cursor-default'
+                        : 'bg-[var(--text-primary)]/[0.03] border border-[var(--text-primary)]/5 cursor-default'
                     )}
                   >
-                    <span className={cn('text-[0.8rem] font-semibold', journalForDay ? 'text-[#f8fafc]' : 'text-[#64748b]')}>
+                    <span className={cn('text-[0.8rem] font-semibold', journalForDay ? 'text-[var(--text-primary)]' : 'text-[var(--text-muted)]')}>
                       {day}
                     </span>
                     {journalForDay && (

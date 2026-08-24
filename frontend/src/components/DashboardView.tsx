@@ -120,7 +120,7 @@ export default function DashboardView({ onNewJournal, onSelectJournal, showToast
             Good day,{' '}
             <span className="bg-[linear-gradient(135deg,#818cf8,#c084fc)] bg-clip-text text-transparent">{username}</span> 👋
           </h1>
-          <p className="text-[#94a3b8] text-[1.05rem] leading-[1.6] mb-6">
+          <p className="text-[var(--text-secondary)] text-[1.05rem] leading-[1.6] mb-6">
             Write about your day and we'll automatically pick up on your mood, adding a matching emoji as you type.
           </p>
           <button onClick={onNewJournal} className="btn-primary py-[0.85rem] px-7 text-base">
@@ -137,8 +137,8 @@ export default function DashboardView({ onNewJournal, onSelectJournal, showToast
             <Flame size={28} color="#fde047" />
           </div>
           <div>
-            <div className="text-[0.85rem] text-[#94a3b8] font-medium">Journaling Streak</div>
-            <div className="text-[1.8rem] font-extrabold text-[#f8fafc]">
+            <div className="text-[0.85rem] text-[var(--text-secondary)] font-medium">Journaling Streak</div>
+            <div className="text-[1.8rem] font-extrabold text-[var(--text-primary)]">
               {calculateStreak(journals).current} Days
             </div>
           </div>
@@ -149,8 +149,8 @@ export default function DashboardView({ onNewJournal, onSelectJournal, showToast
             <BookOpen size={28} color="#818cf8" />
           </div>
           <div>
-            <div className="text-[0.85rem] text-[#94a3b8] font-medium">Total Saved Entries</div>
-            <div className="text-[1.8rem] font-extrabold text-[#f8fafc]">{journals.length} Entries</div>
+            <div className="text-[0.85rem] text-[var(--text-secondary)] font-medium">Total Saved Entries</div>
+            <div className="text-[1.8rem] font-extrabold text-[var(--text-primary)]">{journals.length} Entries</div>
           </div>
         </div>
 
@@ -159,8 +159,8 @@ export default function DashboardView({ onNewJournal, onSelectJournal, showToast
             <Heart size={28} color="#4ade80" />
           </div>
           <div className="flex-1">
-            <div className="text-[0.85rem] text-[#94a3b8] font-medium mb-[0.2rem]">AI Wellness Suggestion</div>
-            <div className="text-[0.9rem] text-[#cbd5e1] italic leading-[1.3]">"{recommendation}"</div>
+            <div className="text-[0.85rem] text-[var(--text-secondary)] font-medium mb-[0.2rem]">AI Wellness Suggestion</div>
+            <div className="text-[0.9rem] text-[var(--text-secondary)] italic leading-[1.3]">"{recommendation}"</div>
           </div>
         </div>
       </div>
@@ -190,7 +190,7 @@ export default function DashboardView({ onNewJournal, onSelectJournal, showToast
         <div className="glass-panel p-12 text-center">
           <BookOpen size={48} color="#64748b" className="mb-4" />
           <h3 className="text-[1.2rem] mb-2">No Journal Entries Yet</h3>
-          <p className="text-[#94a3b8] mb-6">Start your journaling journey by writing your first AI-analyzed entry.</p>
+          <p className="text-[var(--text-secondary)] mb-6">Start your journaling journey by writing your first AI-analyzed entry.</p>
           <button onClick={onNewJournal} className="btn-primary">
             <Plus size={18} />
             <span>Create First Entry</span>
@@ -237,18 +237,18 @@ function DashboardJournalCard({ journal, onSelect, onDelete }: DashboardJournalC
         </span>
 
         <div className="flex items-center gap-[0.35rem]">
-          <button onClick={onSelect} className="btn-secondary p-[0.35rem] rounded-lg" title="Edit Entry">
+          <button onClick={onSelect} className="btn-secondary p-[0.35rem] rounded-lg" title="Edit Entry" aria-label="Edit entry">
             <Edit3 size={14} color="#38bdf8" />
           </button>
-          <button onClick={onDelete} className="btn-secondary p-[0.35rem] rounded-lg" title="Delete Entry">
+          <button onClick={onDelete} className="btn-secondary p-[0.35rem] rounded-lg" title="Delete Entry" aria-label="Delete entry">
             <Trash2 size={14} color="#f87171" />
           </button>
         </div>
       </div>
 
       <div onClick={onSelect} className="cursor-pointer">
-        <h3 className="text-[1.15rem] font-bold text-[#f8fafc] leading-[1.3] mb-[0.4rem]">{journal.title}</h3>
-        <p className="text-[0.9rem] text-[#94a3b8] leading-[1.5] line-clamp-3">{journal.content}</p>
+        <h3 className="text-[1.15rem] font-bold text-[var(--text-primary)] leading-[1.3] mb-[0.4rem]">{journal.title}</h3>
+        <p className="text-[0.9rem] text-[var(--text-secondary)] leading-[1.5] line-clamp-3">{journal.content}</p>
       </div>
 
       {journal.tags && journal.tags.length > 0 && (

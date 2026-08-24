@@ -1,4 +1,5 @@
 package com.aijournal.analytics.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.analytics.service.AnalyticsService;
 import org.slf4j.Logger;
@@ -24,15 +25,21 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_RESPONSE_TYPE =
             new ParameterizedTypeReference<>() {
             };
-    // Pragmatic "effectively all" fetch for a demo-scale app - not a real
-    // pagination system. A production-scale platform would page through the
-    // full history instead of assuming it fits in one response.
-    private static final int FETCH_SIZE = 500;
+    // Fetched per-page while paging through a user's full journal history
+    // (see fetchAllJournals below) - previously a single fixed-size request
+    // silently truncated any user's 501st+ journal out of every insight
+    // (word counts, streaks, top topics), with no error or indication it
+    // had happened.
+    private static final int PAGE_SIZE = 200;
+    // Safety cap on the number of pages fetched (200 * 100 = 20,000 journals)
+    // so a pathological account can't make this loop run indefinitely - a
+    // real user's history is expected to be well under this.
+    private static final int MAX_PAGES = 100;
 
     @Value("${journal.service.url:http://journal-service:8083}")
     private String journalServiceUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     @Override
     public Map<String, Object> getUserJournalInsights(Long userId, String authorizationHeader) {
@@ -87,30 +94,59 @@ public class AnalyticsServiceImpl implements AnalyticsService {
     // RecommendationServiceImpl. Unreachable/malformed response both fall back
     // to an empty list rather than throwing, so insights degrade to honest
     // zeroed values instead of a 500.
-    @SuppressWarnings("unchecked")
+    //
+    // Pages through the caller's FULL journal history (bounded by MAX_PAGES)
+    // rather than a single fixed-size request - a single page previously
+    // silently truncated every insight (word counts, streaks, top topics)
+    // at exactly 500 journals for any user with more than that, with no
+    // error or indication anything had been left out.
     private List<Map<String, Object>> fetchAllJournals(String authorizationHeader) {
-        String url = journalServiceUrl + "/api/v1/journals?page=0&size=" + FETCH_SIZE + "&sortBy=createdAt&sortDir=DESC";
         HttpHeaders headers = new HttpHeaders();
         if (authorizationHeader != null) {
             headers.set(HttpHeaders.AUTHORIZATION, authorizationHeader);
         }
         HttpEntity<Void> entity = new HttpEntity<>(headers);
+
+        List<Map<String, Object>> allJournals = new ArrayList<>();
+        int page = 0;
         try {
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.GET, entity, MAP_RESPONSE_TYPE);
-            Map<String, Object> body = response.getBody();
-            if (body == null) {
-                return List.of();
+            while (page < MAX_PAGES) {
+                String url = journalServiceUrl + "/api/v1/journals?page=" + page + "&size=" + PAGE_SIZE
+                        + "&sortBy=createdAt&sortDir=DESC";
+                ResponseEntity<Map<String, Object>> response = restTemplate.exchange(url, HttpMethod.GET, entity, MAP_RESPONSE_TYPE);
+                PageResult pageResult = extractPage(response.getBody());
+                if (pageResult == null) {
+                    break;
+                }
+                allJournals.addAll(pageResult.content());
+                if (pageResult.isLast() || pageResult.content().isEmpty()) {
+                    break;
+                }
+                page++;
             }
-            Object data = body.get("data");
-            if (!(data instanceof Map)) {
-                return List.of();
-            }
-            Object content = ((Map<String, Object>) data).get("content");
-            return content instanceof List ? (List<Map<String, Object>>) content : List.of();
         } catch (Exception e) {
-            log.warn("Could not fetch journals to compute analytics insights, falling back to empty: {}", e.getMessage());
-            return List.of();
+            log.warn("Could not fetch journals to compute analytics insights, falling back to what was fetched so far: {}", e.getMessage());
         }
+        return allJournals;
+    }
+
+    @SuppressWarnings("unchecked")
+    private PageResult extractPage(Map<String, Object> body) {
+        if (body == null) {
+            return null;
+        }
+        Object data = body.get("data");
+        if (!(data instanceof Map)) {
+            return null;
+        }
+        Map<String, Object> dataMap = (Map<String, Object>) data;
+        Object content = dataMap.get("content");
+        List<Map<String, Object>> contentList = content instanceof List ? (List<Map<String, Object>>) content : List.of();
+        boolean isLast = Boolean.TRUE.equals(dataMap.get("last"));
+        return new PageResult(contentList, isLast);
+    }
+
+    private record PageResult(List<Map<String, Object>> content, boolean isLast) {
     }
 
     private int extractWordCount(Map<String, Object> journal) {

@@ -21,14 +21,22 @@ public class SearchController {
         this.searchService = searchService;
     }
 
+    // X-User-Id is now a required header (Spring rejects a missing one with a
+    // clean 400 before this class ever runs) - it used to be optional with a
+    // silent fallback to user 1, which was reachable only if a request ever
+    // got past auth without the header being set, since common-library's
+    // JwtAuthenticationFilter always derives and force-sets this header from
+    // the verified JWT for every authenticated request. Kept as a named
+    // method (not inlined at each call site) purely to keep this change's
+    // diff small against the call sites below.
     private Long resolveUserId(Long userId) {
-        return (userId != null) ? userId : 1L;
+        return userId;
     }
 
     @GetMapping
     @Operation(summary = "Search user-scoped journals with multi-filters (Date, Mood, Tags, Category)")
     public ResponseEntity<ApiResponse<PagedResponse<JournalDocument>>> search(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(required = false) String query,
             @RequestParam(required = false) String mood,
             @RequestParam(required = false) String tag,
@@ -43,7 +51,7 @@ public class SearchController {
     @GetMapping("/semantic")
     @Operation(summary = "Natural Language Smart Semantic Search scoped to current user")
     public ResponseEntity<ApiResponse<PagedResponse<JournalDocument>>> semanticSearch(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam String query,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {

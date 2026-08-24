@@ -40,3 +40,10 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Built APKs (100MB+ each) - distribute via GitHub Releases or EAS instead
+# of committing binaries to the repo. Not currently tracked in git history
+# (confirmed via `git log -- mobile/*.apk`) - this just prevents a future
+# `git add -A` from accidentally picking one up.
+*.apk
+*.aab

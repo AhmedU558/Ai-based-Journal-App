@@ -1,4 +1,5 @@
 package com.aijournal.auth.service;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +31,7 @@ public class TurnstileService {
     private static final Logger log = LoggerFactory.getLogger(TurnstileService.class);
     private static final String SITEVERIFY_URL = "https://challenges.cloudflare.com/turnstile/v0/siteverify";
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     @Value("${turnstile.secret-key:}")
     private String secretKey;

@@ -1,0 +1,7 @@
+# Test-only dependencies - not installed in the production Docker image
+# (kept separate from requirements.txt so the runtime image doesn't carry
+# pytest/pytest-mock, matching the "don't bloat the image" reasoning already
+# applied to removing the unused nltk/scikit-learn/numpy dependencies).
+-r requirements.txt
+pytest>=8.0.0
+pytest-mock>=3.14.0

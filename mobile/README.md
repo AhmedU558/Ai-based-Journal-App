@@ -70,6 +70,7 @@ Two env vars (read via `src/config/env.ts`, `EXPO_PUBLIC_*` prefix required by E
 
 - `EXPO_PUBLIC_USE_MOCKS` - `"true"` (default) for Pass A, `"false"` for Pass B.
 - `EXPO_PUBLIC_API_BASE_URL` - the gateway's reachable address for Pass B (e.g. your machine's LAN IP on port 8080 - `localhost` does not resolve to your dev machine from a physical device or most emulators).
+- `EXPO_PUBLIC_WEB_BASE_URL` - the web frontend's own reachable address (not the gateway - port 3000 by default in local dev). `TurnstileGate.tsx`'s CAPTCHA widget loads `frontend/public/turnstile-embed.html` from here, since that's a static file the frontend's container serves, not something the gateway can route to. In production both this and `EXPO_PUBLIC_API_BASE_URL` typically point at the same public domain, since the host nginx there routes `/api/**` to the gateway and everything else to the frontend from one origin.
 
 ## Structure
 

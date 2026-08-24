@@ -89,10 +89,10 @@ export default function CommandPalette({ isOpen, onClose, onSelectAction }: Comm
           exit={{ opacity: 0, scale: 0.95, y: -20 }}
           transition={{ duration: 0.2, ease: 'easeOut' }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[640px] overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.5)] border border-white/15"
+          className="glass-panel w-full max-w-[640px] overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.5)] border border-[var(--text-primary)]/15"
         >
           {/* Command Search Header */}
-          <div className="flex items-center py-5 px-6 border-b border-b-white/[0.08] gap-[0.85rem]">
+          <div className="flex items-center py-5 px-6 border-b border-b-[var(--text-primary)]/[0.08] gap-[0.85rem]">
             <Search size={22} color="var(--accent-indigo, #6366f1)" />
             <input
               type="text"
@@ -102,7 +102,7 @@ export default function CommandPalette({ isOpen, onClose, onSelectAction }: Comm
               onChange={(e) => setQuery(e.target.value)}
               className="bg-transparent border-0 outline-none text-[var(--text-primary,#ffffff)] text-[1.1rem] w-full font-medium"
             />
-            <button onClick={onClose} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
               <X size={20} />
             </button>
           </div>
@@ -110,7 +110,7 @@ export default function CommandPalette({ isOpen, onClose, onSelectAction }: Comm
           {/* Action List */}
           <div className="max-h-[380px] overflow-y-auto p-3">
             {filteredActions.length === 0 ? (
-              <div className="p-8 text-center text-[#64748b] text-[0.9rem]">
+              <div className="p-8 text-center text-[var(--text-muted)] text-[0.9rem]">
                 No commands matching "{query}"
               </div>
             ) : (
@@ -131,10 +131,10 @@ export default function CommandPalette({ isOpen, onClose, onSelectAction }: Comm
                     <div className="flex items-center gap-[0.85rem]">
                       {act.icon}
                       <div>
-                        <div className={cn('text-[0.95rem] font-semibold', isSelected ? 'text-white' : 'text-[var(--text-primary)]')}>
+                        <div className={cn('text-[0.95rem] font-semibold', isSelected ? 'text-[var(--text-primary)]' : 'text-[var(--text-primary)]')}>
                           {act.label}
                         </div>
-                        <div className="text-xs text-[#64748b]">{act.category}</div>
+                        <div className="text-xs text-[var(--text-muted)]">{act.category}</div>
                       </div>
                     </div>
 
@@ -150,11 +150,11 @@ export default function CommandPalette({ isOpen, onClose, onSelectAction }: Comm
           </div>
 
           {/* Footer Bar */}
-          <div className="py-3 px-6 bg-black/20 border-t border-t-white/[0.06] flex items-center justify-between text-xs text-[#64748b]">
+          <div className="py-3 px-6 bg-black/20 border-t border-t-[var(--text-primary)]/[0.06] flex items-center justify-between text-xs text-[var(--text-muted)]">
             <div className="flex items-center gap-4">
-              <span><strong className="text-[#94a3b8]">↑↓</strong> Navigate</span>
-              <span><strong className="text-[#94a3b8]">↵</strong> Select</span>
-              <span><strong className="text-[#94a3b8]">ESC</strong> Close</span>
+              <span><strong className="text-[var(--text-secondary)]">↑↓</strong> Navigate</span>
+              <span><strong className="text-[var(--text-secondary)]">↵</strong> Select</span>
+              <span><strong className="text-[var(--text-secondary)]">ESC</strong> Close</span>
             </div>
             <div className="flex items-center gap-[0.35rem]">
               <Command size={12} />

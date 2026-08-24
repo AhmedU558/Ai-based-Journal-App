@@ -8,9 +8,13 @@ const COOKIE_EXPIRES_DAYS = 10 / (24 * 60); // 10 Minutes in days (10/1440)
 
 // Dedicated axios instance for the refresh call - deliberately bypasses api.js's
 // interceptors so a refresh failure can't recursively trigger another refresh attempt.
+// withCredentials is required here too - the refresh token itself now lives
+// only in an httpOnly cookie set by auth-service, not in anything this code
+// can read, so the browser must be told to actually attach it.
 const refreshClient = axios.create({
   baseURL: api.defaults.baseURL,
   headers: { 'Content-Type': 'application/json' },
+  withCredentials: true,
 });
 
 export const authService = {
@@ -45,15 +49,14 @@ export const authService = {
     return res;
   },
 
-  // Exchanges the stored (single-use) refresh token for a new access/refresh pair.
-  // Throws if the refresh token is missing, expired, or already revoked - callers
-  // should treat a throw here as "the session is over, log out."
+  // Exchanges the (single-use) refresh token for a new access/refresh pair.
+  // The refresh token itself is never read here - it lives only in an
+  // httpOnly cookie the browser attaches automatically (refreshClient has
+  // withCredentials: true), invisible to this or any other page JS. Throws
+  // if the cookie is missing, expired, or already revoked - callers should
+  // treat a throw here as "the session is over, log out."
   refreshAccessToken: async () => {
-    const refreshToken = localStorage.getItem('jwt_refresh_token');
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
-    }
-    const res = await refreshClient.post('/api/v1/auth/refresh', { refreshToken });
+    const res = await refreshClient.post('/api/v1/auth/refresh', {});
     const authData = res?.data?.data;
     if (!authData?.accessToken) {
       throw new Error('Refresh response missing an access token');
@@ -110,13 +113,15 @@ export const authService = {
   // minutes regardless of client activity, so a session that stays "valid" locally
   // for longer than that relies on the response interceptor in api.js calling
   // refreshAccessToken() transparently on a 401, not on this expiry alone.
-  setSession: (token, refreshToken, userId, username) => {
+  // refreshToken is accepted but deliberately never persisted here -
+  // auth-service already set it as an httpOnly cookie in the same response
+  // (invisible to this or any other page JS), so storing it a second time
+  // in localStorage would just be a second, XSS-readable copy of the same
+  // long-lived credential for no benefit.
+  setSession: (token, _refreshToken, userId, username) => {
     const expiryTime = Date.now() + SESSION_DURATION_MS;
     Cookies.set('jwt_token', token, { expires: COOKIE_EXPIRES_DAYS, sameSite: 'Lax' });
     localStorage.setItem('jwt_token', token);
-    if (refreshToken) {
-      localStorage.setItem('jwt_refresh_token', refreshToken);
-    }
     localStorage.setItem('user_id', String(userId || '1'));
     localStorage.setItem('user_name', username || localStorage.getItem('user_name') || 'Journaler');
     localStorage.setItem('session_expiry', String(expiryTime));
@@ -137,14 +142,12 @@ export const authService = {
 
   // Logout user and clear tokens. Best-effort revokes the refresh token server-side
   // (fire-and-forget - local state is cleared regardless of whether this succeeds).
+  // The browser attaches the httpOnly refresh-token cookie automatically; the
+  // backend both revokes it server-side and clears the cookie in its response.
   logout: () => {
-    const refreshToken = localStorage.getItem('jwt_refresh_token');
-    if (refreshToken) {
-      refreshClient.post('/api/v1/auth/logout', { refreshToken }).catch(() => {});
-    }
+    refreshClient.post('/api/v1/auth/logout', {}).catch(() => {});
     Cookies.remove('jwt_token');
     localStorage.removeItem('jwt_token');
-    localStorage.removeItem('jwt_refresh_token');
     localStorage.removeItem('user_id');
     localStorage.removeItem('user_name');
     localStorage.removeItem('session_expiry');

@@ -2,11 +2,14 @@ package com.aijournal.file.controller;
 
 import com.aijournal.common.exception.ForbiddenException;
 import com.aijournal.file.storage.FileStorageStrategy;
+import com.aijournal.file.validation.FileTypeValidator;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.Resource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.web.multipart.MultipartFile;
@@ -21,6 +24,9 @@ class FileControllerTest {
 
     @Mock
     private FileStorageStrategy fileStorageStrategy;
+
+    @Mock
+    private FileTypeValidator fileTypeValidator;
 
     @InjectMocks
     private FileController fileController;
@@ -38,12 +44,12 @@ class FileControllerTest {
 
     @Test
     void downloadFile_OwnPrefixedPath_Succeeds() {
-        byte[] data = "content".getBytes();
-        when(fileStorageStrategy.getFile("user-5/photo.jpg")).thenReturn(data);
+        Resource resource = new ByteArrayResource("content".getBytes());
+        when(fileStorageStrategy.getFile("user-5/photo.jpg")).thenReturn(resource);
 
-        ResponseEntity<byte[]> response = fileController.downloadFile(5L, "user-5/photo.jpg");
+        ResponseEntity<Resource> response = fileController.downloadFile(5L, "user-5/photo.jpg");
 
-        assertThat(response.getBody()).isEqualTo(data);
+        assertThat(response.getBody()).isEqualTo(resource);
     }
 
     @Test

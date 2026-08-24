@@ -2,6 +2,7 @@ package com.aijournal.journal.controller;
 
 import com.aijournal.common.dto.ApiResponse;
 import com.aijournal.common.dto.PagedResponse;
+import com.aijournal.journal.dto.JournalRequest;
 import com.aijournal.journal.entity.Journal;
 import com.aijournal.journal.service.JournalService;
 
@@ -25,17 +26,44 @@ public class JournalController {
         this.journalService = journalService;
     }
 
+    // X-User-Id is now a required header (Spring rejects a missing one with a
+    // clean 400 before this class ever runs) - it used to be optional with a
+    // silent fallback to user 1, which was reachable only if a request ever
+    // got past auth without the header being set, since common-library's
+    // JwtAuthenticationFilter always derives and force-sets this header from
+    // the verified JWT for every authenticated request. Kept as a named
+    // method (not inlined at each call site) purely to keep this change's
+    // diff small against the many call sites below.
     private Long resolveUserId(Long userId) {
-        return (userId != null) ? userId : 1L;
+        return userId;
+    }
+
+    // Builds the entity from the request-only DTO rather than letting Jackson
+    // deserialize the client's JSON straight onto a Journal - id/version/
+    // userId/contentEncrypted/wordCount/timestamps/isDeleted are structurally
+    // absent from JournalRequest, so they can never come from client input at
+    // all, independent of JournalServiceImpl's own defensive resets.
+    private Journal toEntity(JournalRequest request) {
+        Journal journal = new Journal();
+        journal.setTitle(request.getTitle());
+        journal.setContent(request.getContent());
+        journal.setMood(request.getMood());
+        journal.setTags(request.getTags());
+        journal.setLocation(request.getLocation());
+        journal.setWeather(request.getWeather());
+        journal.setIsDraft(request.getIsDraft());
+        journal.setFolderId(request.getFolderId());
+        journal.setCategoryId(request.getCategoryId());
+        return journal;
     }
 
     @PostMapping
     @Operation(summary = "Create a new journal entry or draft")
     public ResponseEntity<ApiResponse<Journal>> createJournal(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
-            @Valid @RequestBody Journal journal) {
+            @RequestHeader("X-User-Id") Long userId,
+            @Valid @RequestBody JournalRequest request) {
         Long activeUserId = resolveUserId(userId);
-        Journal created = journalService.createJournal(activeUserId, journal);
+        Journal created = journalService.createJournal(activeUserId, toEntity(request));
         return ResponseEntity.status(HttpStatus.CREATED)
                 .body(ApiResponse.success("Journal entry created successfully", created));
     }
@@ -43,18 +71,18 @@ public class JournalController {
     @PutMapping("/{id}")
     @Operation(summary = "Update an existing journal entry")
     public ResponseEntity<ApiResponse<Journal>> updateJournal(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id,
-            @Valid @RequestBody Journal journal) {
+            @Valid @RequestBody JournalRequest request) {
         Long activeUserId = resolveUserId(userId);
-        Journal updated = journalService.updateJournal(activeUserId, id, journal);
+        Journal updated = journalService.updateJournal(activeUserId, id, toEntity(request));
         return ResponseEntity.ok(ApiResponse.success("Journal entry updated successfully", updated));
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Get journal entry by ID")
     public ResponseEntity<ApiResponse<Journal>> getJournalById(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         Journal journal = journalService.getJournalById(activeUserId, id);
@@ -64,7 +92,7 @@ public class JournalController {
     @GetMapping
     @Operation(summary = "Get all active journals with pagination")
     public ResponseEntity<ApiResponse<PagedResponse<Journal>>> getUserJournals(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "createdAt") String sortBy,
@@ -79,7 +107,7 @@ public class JournalController {
     @GetMapping("/pinned")
     @Operation(summary = "Get pinned journals")
     public ResponseEntity<ApiResponse<PagedResponse<Journal>>> getPinnedJournals(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long activeUserId = resolveUserId(userId);
@@ -90,7 +118,7 @@ public class JournalController {
     @GetMapping("/favorites")
     @Operation(summary = "Get favorite journals")
     public ResponseEntity<ApiResponse<PagedResponse<Journal>>> getFavoriteJournals(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long activeUserId = resolveUserId(userId);
@@ -101,7 +129,7 @@ public class JournalController {
     @GetMapping("/archived")
     @Operation(summary = "Get archived journals")
     public ResponseEntity<ApiResponse<PagedResponse<Journal>>> getArchivedJournals(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         Long activeUserId = resolveUserId(userId);
@@ -111,28 +139,28 @@ public class JournalController {
 
     @PatchMapping("/{id}/pin")
     @Operation(summary = "Toggle pin status")
-    public ResponseEntity<ApiResponse<Journal>> togglePin(@RequestHeader(value = "X-User-Id", required = false) Long userId, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Journal>> togglePin(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("Pin status updated", journalService.togglePin(activeUserId, id)));
     }
 
     @PatchMapping("/{id}/favorite")
     @Operation(summary = "Toggle favorite status")
-    public ResponseEntity<ApiResponse<Journal>> toggleFavorite(@RequestHeader(value = "X-User-Id", required = false) Long userId, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Journal>> toggleFavorite(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("Favorite status updated", journalService.toggleFavorite(activeUserId, id)));
     }
 
     @PatchMapping("/{id}/archive")
     @Operation(summary = "Toggle archive status")
-    public ResponseEntity<ApiResponse<Journal>> toggleArchive(@RequestHeader(value = "X-User-Id", required = false) Long userId, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Journal>> toggleArchive(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         return ResponseEntity.ok(ApiResponse.success("Archive status updated", journalService.toggleArchive(activeUserId, id)));
     }
 
     @DeleteMapping("/{id}")
     @Operation(summary = "Soft delete journal entry")
-    public ResponseEntity<ApiResponse<Void>> softDeleteJournal(@RequestHeader(value = "X-User-Id", required = false) Long userId, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> softDeleteJournal(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         journalService.softDeleteJournal(activeUserId, id);
         return ResponseEntity.ok(ApiResponse.success("Journal soft deleted successfully", null));
@@ -140,7 +168,7 @@ public class JournalController {
 
     @DeleteMapping("/{id}/permanent")
     @Operation(summary = "Permanently delete journal entry")
-    public ResponseEntity<ApiResponse<Void>> permanentDeleteJournal(@RequestHeader(value = "X-User-Id", required = false) Long userId, @PathVariable Long id) {
+    public ResponseEntity<ApiResponse<Void>> permanentDeleteJournal(@RequestHeader("X-User-Id") Long userId, @PathVariable Long id) {
         Long activeUserId = resolveUserId(userId);
         journalService.permanentDeleteJournal(activeUserId, id);
         return ResponseEntity.ok(ApiResponse.success("Journal permanently deleted", null));

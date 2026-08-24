@@ -72,7 +72,16 @@ api.interceptors.response.use(
                           error.message ||
                           'Network error connecting to Gateway.';
 
-    return Promise.reject(new Error(serverMessage));
+    // Rejecting with a bare `new Error(serverMessage)` used to drop
+    // error.response entirely - callers could read a message but never
+    // branch on the real status code or field-validation payload (e.g. a
+    // 409 Conflict vs. a 404 Not Found needing different UI treatment).
+    // Attaching the original response/status onto the new Error preserves
+    // that without changing what every existing `err.message` caller sees.
+    const enrichedError = new Error(serverMessage);
+    enrichedError.response = error.response;
+    enrichedError.status = error.response?.status;
+    return Promise.reject(enrichedError);
   }
 );
 

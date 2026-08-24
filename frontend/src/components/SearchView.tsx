@@ -80,7 +80,7 @@ export default function SearchView() {
         <h1 className="text-[2rem] font-extrabold flex items-center gap-[0.6rem]">
           <Search size={26} color="#818cf8" /> Search Your Journals
         </h1>
-        <p className="text-[#94a3b8] text-[0.9rem]">
+        <p className="text-[var(--text-secondary)] text-[0.9rem]">
           Find any entry instantly by title, content, mood, or tag
         </p>
       </div>
@@ -109,8 +109,8 @@ export default function SearchView() {
                 className={cn(
                   'py-[0.35rem] px-3 rounded-2xl text-xs cursor-pointer',
                   selectedMoodFilter === m
-                    ? 'bg-[rgba(99,102,241,0.25)] border border-[#6366f1] text-white font-bold'
-                    : 'bg-white/[0.04] border border-white/[0.08] text-[#94a3b8] font-medium'
+                    ? 'bg-[rgba(99,102,241,0.25)] border border-[#6366f1] text-[var(--text-primary)] font-bold'
+                    : 'bg-[var(--text-primary)]/[0.04] border border-[var(--text-primary)]/[0.08] text-[var(--text-secondary)] font-medium'
                 )}
               >
                 {m === 'ALL' ? 'All Moods' : `${m} ${getMoodEmoji(m)}`}
@@ -123,17 +123,17 @@ export default function SearchView() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as SortBy)}
-              className="bg-white/5 border border-white/10 text-[#f8fafc] py-[0.35rem] px-3 rounded-xl text-[0.8rem] cursor-pointer"
+              className="bg-[var(--text-primary)]/5 border border-[var(--text-primary)]/10 text-[var(--text-primary)] py-[0.35rem] px-3 rounded-xl text-[0.8rem] cursor-pointer"
             >
-              <option value="newest" style={{ background: '#101426' }}>Newest First</option>
-              <option value="oldest" style={{ background: '#101426' }}>Oldest First</option>
+              <option value="newest" style={{ background: 'var(--bg-secondary)' }}>Newest First</option>
+              <option value="oldest" style={{ background: 'var(--bg-secondary)' }}>Oldest First</option>
             </select>
           </div>
         </div>
       </div>
 
       {/* Results Header Count */}
-      <div className="text-[0.85rem] text-[#94a3b8] flex items-center gap-[0.4rem]">
+      <div className="text-[0.85rem] text-[var(--text-secondary)] flex items-center gap-[0.4rem]">
         <Sparkles size={14} color="#4ade80" />
         <span>{loading ? 'Searching...' : `Found ${sortedResults.length} matching entries`}</span>
       </div>
@@ -151,7 +151,7 @@ export default function SearchView() {
         <div className="glass-panel p-14 text-center">
           <BookOpen size={44} color="#64748b" className="mb-4" />
           <h3 className="text-[1.15rem] mb-[0.4rem]">No Matching Entries</h3>
-          <p className="text-[#94a3b8]">Try adjusting your search query or mood filters.</p>
+          <p className="text-[var(--text-secondary)]">Try adjusting your search query or mood filters.</p>
         </div>
       ) : (
         <div className="grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
@@ -161,13 +161,13 @@ export default function SearchView() {
                 <span className="text-xs py-1 px-[0.65rem] rounded-2xl bg-[rgba(99,102,241,0.15)] text-[#818cf8] font-bold">
                   {getMoodEmoji(j.mood)} {j.mood || 'HAPPY'}
                 </span>
-                <span className="text-xs text-[#64748b]">
+                <span className="text-xs text-[var(--text-muted)]">
                   {j.createdAt ? new Date(j.createdAt).toLocaleDateString() : 'Recent'}
                 </span>
               </div>
 
-              <h3 className="text-[1.1rem] font-bold text-[#f8fafc]">{j.title}</h3>
-              <p className="text-[0.88rem] text-[#94a3b8] leading-[1.5] line-clamp-3">{j.content}</p>
+              <h3 className="text-[1.1rem] font-bold text-[var(--text-primary)]">{j.title}</h3>
+              <p className="text-[0.88rem] text-[var(--text-secondary)] leading-[1.5] line-clamp-3">{j.content}</p>
             </div>
           ))}
         </div>

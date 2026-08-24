@@ -4,7 +4,6 @@
 
 | Service | Port | MySQL | RabbitMQ | Elasticsearch | Eureka |
 |---|:---:|:---:|:---:|:---:|:---:|
-| config-server | 8888 | - | - | - | - (is the config source) |
 | discovery-server | 8761 | - | - | - | - (is the Eureka server) |
 | gateway-service | 8080 | - | - | - | yes |
 | auth-service | 8081 | `auth_db` | - | - | yes |

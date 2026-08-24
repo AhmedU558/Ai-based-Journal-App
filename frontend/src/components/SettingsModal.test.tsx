@@ -533,9 +533,28 @@ describe('SettingsModal', () => {
     const onClose = vi.fn();
     render(<SettingsModal isOpen onClose={onClose} />);
 
-    await user.click(screen.getByRole('button', { name: '' }));
+    // The close button now has a real accessible name (aria-label="Close")
+    // instead of being an unlabeled icon-only button.
+    await user.click(screen.getByRole('button', { name: 'Close' }));
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('calls onClose when Escape is pressed', async () => {
+    const user = userEvent.setup();
+    const onClose = vi.fn();
+    render(<SettingsModal isOpen onClose={onClose} />);
+
+    await user.keyboard('{Escape}');
+
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('exposes the dialog panel with role="dialog" and aria-modal', () => {
+    render(<SettingsModal isOpen onClose={vi.fn()} />);
+
+    const dialog = screen.getByRole('dialog', { name: 'Account & System Settings' });
+    expect(dialog).toHaveAttribute('aria-modal', 'true');
   });
 
   it('calls onClose on backdrop click but not on panel content click', async () => {

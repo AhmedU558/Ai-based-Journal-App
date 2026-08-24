@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { View, Text } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { API_BASE_URL } from '@/config/env';
+import { WEB_BASE_URL } from '@/config/env';
 
 // Cloudflare has no official React Native SDK - the standard workaround is
 // embedding the real web widget inside a WebView and bridging the token
@@ -29,7 +29,7 @@ export function TurnstileGate({ action, onVerify, resetKey }: TurnstileGateProps
 
   if (!SITE_KEY) return null;
 
-  const embedUrl = `${API_BASE_URL}/turnstile-embed.html?action=${action}&sitekey=${encodeURIComponent(SITE_KEY)}`;
+  const embedUrl = `${WEB_BASE_URL}/turnstile-embed.html?action=${action}&sitekey=${encodeURIComponent(SITE_KEY)}`;
 
   const handleMessage = (event: WebViewMessageEvent) => {
     try {

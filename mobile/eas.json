@@ -18,7 +18,8 @@
       },
       "env": {
         "EXPO_PUBLIC_USE_MOCKS": "false",
-        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-GATEWAY-URL"
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-GATEWAY-URL",
+        "EXPO_PUBLIC_WEB_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-WEB-FRONTEND-URL"
       }
     },
     "production": {
@@ -28,7 +29,8 @@
       },
       "env": {
         "EXPO_PUBLIC_USE_MOCKS": "false",
-        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-GATEWAY-URL"
+        "EXPO_PUBLIC_API_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-GATEWAY-URL",
+        "EXPO_PUBLIC_WEB_BASE_URL": "https://REPLACE-WITH-YOUR-DEPLOYED-WEB-FRONTEND-URL"
       }
     }
   },

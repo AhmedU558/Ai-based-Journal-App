@@ -38,7 +38,7 @@ Only `journal-service` (producer) and `search-service` (consumer) are actually w
 - **AI writing assistant**: rephrase, grammar fix, continue-writing, auto-tags, summarization.
 - **Analytics dashboard**: mood radar chart, real consecutive-day streak, AI-level tiering based on entry count.
 - **Elasticsearch-backed search**: full-text + mood/tag filtering, real relevance ranking (not client-side filtering).
-- **TOTP-based two-factor authentication** with recovery codes (in progress - see `feature/enterprise-settings-2fa`, not yet merged).
+- **TOTP-based two-factor authentication** with recovery codes, admin-triggered reset, and real login-history logging.
 - **10-minute active session expiry**, JWT access/refresh tokens, gateway- and service-level auth enforcement.
 
 ---
@@ -48,7 +48,7 @@ Only `journal-service` (producer) and `search-service` (consumer) are actually w
 | Service | Port | Depends on | Purpose |
 | :--- | :---: | :--- | :--- |
 | `gateway-service` | 8080 | Eureka | API routing, CORS, JWT verification at the edge |
-| `auth-service` | 8081 | MySQL (`auth_db`), Eureka | Registration, login, JWT issuance, 2FA (unmerged branch) |
+| `auth-service` | 8081 | MySQL (`auth_db`), Eureka | Registration, login, JWT issuance, TOTP 2FA |
 | `user-service` | 8082 | MySQL (`user_db`), Eureka | Profile & preferences |
 | `journal-service` | 8083 | MySQL (`journal_db`), RabbitMQ, Eureka | Journal CRUD, publishes create/update events |
 | `ai-service` | 8084 | MySQL (`ai_db`), `python-ai-service`, Eureka | Proxies AI features to the Flask service |
@@ -58,7 +58,6 @@ Only `journal-service` (producer) and `search-service` (consumer) are actually w
 | `analytics-service` | 8088 | `journal-service`, Eureka | Real journal insights (streaks, word counts, top topics) computed from the caller's entries |
 | `file-service` | 8089 | Local disk, Eureka | Attachment upload/download |
 | `python-ai-service` | 5000 | Flask, Hugging Face (optional) | Mood/summarize/rephrase/grammar NLP |
-| `config-server` | 8888 | - | Spring Cloud Config source |
 | `discovery-server` | 8761 | - | Eureka registry |
 
 Each service has its own README with its full endpoint list - see the links in the table above's row, or browse each service directory directly (e.g. [auth-service/README.md](auth-service/README.md)).

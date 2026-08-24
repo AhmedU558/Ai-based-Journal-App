@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, ZoomIn } from 'lucide-react';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 interface AvatarCropModalProps {
   file: File;
@@ -30,6 +31,11 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: AvatarCro
     setImageUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [file]);
+
+  // This component is only ever mounted while open (the parent conditionally
+  // renders it, unlike the other modals which take an isOpen prop) - always
+  // true here, since mounted IS the open state.
+  const panelRef = useModalA11y(true, onCancel);
 
   const handleImageLoad = () => {
     if (!imgRef.current) return;
@@ -127,15 +133,20 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: AvatarCro
         className="fixed inset-0 bg-black/70 backdrop-blur-[6px] z-[10000] flex items-center justify-center p-6"
       >
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Move and scale avatar"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[420px] p-6 flex flex-col gap-5"
+          className="glass-panel w-full max-w-[420px] p-6 flex flex-col gap-5 outline-none"
         >
           <div className="flex items-center justify-between">
             <h3 className="text-[1.05rem] font-bold">Move and Scale</h3>
-            <button onClick={onCancel} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onCancel} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer" aria-label="Close">
               <X size={20} />
             </button>
           </div>
@@ -167,7 +178,7 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: AvatarCro
           </div>
 
           <div className="flex items-center gap-3">
-            <ZoomIn size={16} className="text-[#64748b] shrink-0" />
+            <ZoomIn size={16} className="text-[var(--text-muted)] shrink-0" />
             <input
               type="range"
               min={1}

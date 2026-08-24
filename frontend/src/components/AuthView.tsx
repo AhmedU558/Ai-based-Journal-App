@@ -18,7 +18,7 @@ interface AuthFormData {
 
 type AuthStep = 'credentials' | 'mfa-challenge' | 'forgot-password' | 'reset-password';
 
-const LABEL_CLASS = 'block text-[0.85rem] text-[#cbd5e1] mb-[0.4rem] font-medium';
+const LABEL_CLASS = 'block text-[0.85rem] text-[var(--text-secondary)] mb-[0.4rem] font-medium';
 const ICON_CLASS = 'absolute left-[0.85rem] top-1/2 -translate-y-1/2';
 
 // Mirrors auth-service's PasswordPolicy.REGEX exactly (8-12 chars, one
@@ -44,12 +44,12 @@ function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) {
   const strengthColor = strengthPercent === 100 ? '#4ade80' : strengthPercent >= 50 ? '#fbbf24' : '#f87171';
 
   return (
-    <div className="mt-2 p-3 rounded-lg bg-white/[0.04] border border-white/[0.08] flex flex-col gap-2 animate-fade-in">
+    <div className="mt-2 p-3 rounded-lg bg-[var(--text-primary)]/[0.04] border border-[var(--text-primary)]/[0.08] flex flex-col gap-2 animate-fade-in">
       <div className="flex items-center justify-between text-[0.75rem]">
-        <span className="text-[#94a3b8]">Password strength</span>
+        <span className="text-[var(--text-secondary)]">Password strength</span>
         <span style={{ color: strengthColor }} className="font-semibold">{strengthPercent}%</span>
       </div>
-      <div className="h-[5px] rounded-full bg-white/[0.08] overflow-hidden">
+      <div className="h-[5px] rounded-full bg-[var(--text-primary)]/[0.08] overflow-hidden">
         <div
           className="h-full rounded-full transition-all duration-300"
           style={{ width: `${strengthPercent}%`, backgroundColor: strengthColor }}
@@ -59,7 +59,7 @@ function PasswordStrengthMeter({ password }: PasswordStrengthMeterProps) {
         {checks.map((check) => (
           <li key={check.label} className="flex items-center gap-2 text-[0.75rem]">
             {check.met ? <Check size={13} color="#4ade80" /> : <Circle size={13} color="#64748b" />}
-            <span className={check.met ? 'text-[#4ade80]' : 'text-[#64748b]'}>{check.label}</span>
+            <span className={check.met ? 'text-[#4ade80]' : 'text-[var(--text-muted)]'}>{check.label}</span>
           </li>
         ))}
       </ul>
@@ -211,7 +211,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
               <ShieldCheck size={32} color="#ffffff" />
             </div>
             <h1 className="text-[2rem] font-extrabold mb-2">Two-Factor Verification</h1>
-            <p className="text-[#94a3b8] text-[0.9rem]">
+            <p className="text-[var(--text-secondary)] text-[0.9rem]">
               {useRecoveryCode
                 ? 'Enter one of your saved recovery codes'
                 : 'Enter the 6-digit code from your authenticator app'}
@@ -253,18 +253,18 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
             </button>
           </form>
 
-          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-white/[0.08] flex flex-col gap-2">
+          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-[var(--text-primary)]/[0.08] flex flex-col gap-2">
             <button
               onClick={() => {
                 setUseRecoveryCode(!useRecoveryCode);
                 setMfaCode('');
                 setError('');
               }}
-              className="bg-transparent border-0 text-[#94a3b8] cursor-pointer text-[0.9rem]"
+              className="bg-transparent border-0 text-[var(--text-secondary)] cursor-pointer text-[0.9rem]"
             >
               {useRecoveryCode ? 'Use an authenticator code instead' : 'Use a recovery code instead'}
             </button>
-            <button onClick={backToCredentials} className="bg-transparent border-0 text-[#64748b] cursor-pointer text-[0.85rem]">
+            <button onClick={backToCredentials} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer text-[0.85rem]">
               Back to Sign In
             </button>
           </div>
@@ -285,7 +285,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
               <KeyRound size={32} color="#ffffff" />
             </div>
             <h1 className="text-[2rem] font-extrabold mb-2">Reset Your Password</h1>
-            <p className="text-[#94a3b8] text-[0.9rem]">Enter your account email and we'll send you a reset code</p>
+            <p className="text-[var(--text-secondary)] text-[0.9rem]">Enter your account email and we'll send you a reset code</p>
           </div>
 
           {error && (
@@ -316,14 +316,14 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
             </button>
           </form>
 
-          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-white/[0.08] flex flex-col gap-2">
+          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-[var(--text-primary)]/[0.08] flex flex-col gap-2">
             <button
               onClick={() => setAuthStep('reset-password')}
-              className="bg-transparent border-0 text-[#94a3b8] cursor-pointer text-[0.9rem]"
+              className="bg-transparent border-0 text-[var(--text-secondary)] cursor-pointer text-[0.9rem]"
             >
               Already have a code?
             </button>
-            <button onClick={backToCredentials} className="bg-transparent border-0 text-[#64748b] cursor-pointer text-[0.85rem]">
+            <button onClick={backToCredentials} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer text-[0.85rem]">
               Back to Sign In
             </button>
           </div>
@@ -344,7 +344,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
               <KeyRound size={32} color="#ffffff" />
             </div>
             <h1 className="text-[2rem] font-extrabold mb-2">Enter Reset Code</h1>
-            <p className="text-[#94a3b8] text-[0.9rem]">Check your email for the code, then choose a new password</p>
+            <p className="text-[var(--text-secondary)] text-[0.9rem]">Check your email for the code, then choose a new password</p>
           </div>
 
           {infoMessage && (
@@ -417,8 +417,8 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
             </button>
           </form>
 
-          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-white/[0.08]">
-            <button onClick={backToCredentials} className="bg-transparent border-0 text-[#64748b] cursor-pointer text-[0.85rem]">
+          <div className="text-center mt-6 pt-[1.2rem] border-t border-t-[var(--text-primary)]/[0.08]">
+            <button onClick={backToCredentials} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer text-[0.85rem]">
               Back to Sign In
             </button>
           </div>
@@ -442,7 +442,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
           <h1 className="text-[2rem] font-extrabold mb-2">
             {isLogin ? 'Welcome Back to Mindora' : 'Create Your Mindora Account'}
           </h1>
-          <p className="text-[#94a3b8] text-[0.9rem]">
+          <p className="text-[var(--text-secondary)] text-[0.9rem]">
             {isLogin ? 'Sign in to access your AI-powered journals & insights' : 'Join the next-generation intelligent journaling platform'}
           </p>
         </div>
@@ -566,7 +566,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
         </form>
 
         {/* Tab Toggle Footer */}
-        <div className="text-center mt-6 pt-[1.2rem] border-t border-t-white/[0.08]">
+        <div className="text-center mt-6 pt-[1.2rem] border-t border-t-[var(--text-primary)]/[0.08]">
           <button
             onClick={() => {
               setIsLogin(!isLogin);
@@ -574,7 +574,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
               setTurnstileToken('');
               setTurnstileResetKey((k) => k + 1);
             }}
-            className="bg-transparent border-0 text-[#94a3b8] cursor-pointer text-[0.9rem]"
+            className="bg-transparent border-0 text-[var(--text-secondary)] cursor-pointer text-[0.9rem]"
           >
             {isLogin ? (
               <span>
@@ -592,7 +592,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
           <button
             type="button"
             onClick={onNavigateToDownload}
-            className="flex items-center justify-center gap-2 mt-4 w-full text-[0.8rem] text-[#64748b] hover:text-[#94a3b8] transition-colors bg-transparent border-0 cursor-pointer"
+            className="flex items-center justify-center gap-2 mt-4 w-full text-[0.8rem] text-[var(--text-muted)] hover:text-[var(--text-secondary)] transition-colors bg-transparent border-0 cursor-pointer"
           >
             <Smartphone size={14} />
             Get the Mindora mobile app

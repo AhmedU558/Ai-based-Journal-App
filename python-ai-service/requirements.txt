@@ -1,7 +1,10 @@
 flask>=3.0.0
 flask-cors>=4.0.0
-gunicorn>=21.2.0
-requests>=2.31.0
-nltk>=3.8.1
-scikit-learn>=1.3.0
-numpy>=1.24.0
+# >=22.0.0 - CVE-2024-1135 (HTTP request smuggling) affects earlier versions.
+gunicorn>=22.0.0
+# >=2.32.0 - CVE-2024-35195 (session verify=False bypass) affects earlier versions.
+requests>=2.32.0
+# nltk/scikit-learn/numpy were never actually imported anywhere in app.py -
+# dead weight that only bloated the image (~300MB+) for zero functionality.
+# This service's real "AI" fallback logic is plain keyword/rule-based Python,
+# not a real ML pipeline - removed rather than kept as unused scaffolding.

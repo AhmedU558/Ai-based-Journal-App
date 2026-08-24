@@ -18,6 +18,7 @@ import {
 import { Smile, TrendingUp, Flame, Award, RefreshCw, AlertCircle, BarChart3, Hash, PenLine, CalendarDays } from 'lucide-react';
 import { journalService } from '@/services/journalService';
 import { analyticsService } from '@/services/analyticsService';
+import { useThemeTokens } from '@/lib/useThemeTokens';
 import { MOODS as SHARED_MOODS, MOOD_META, type Mood as SharedMood, type MoodMeta } from '@/lib/moods';
 import { getAiLevel } from '@/lib/journalStats';
 
@@ -66,6 +67,10 @@ export default function AnalyticsView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [insights, setInsights] = useState<Insights | null>(null);
+  // Recharts reads raw SVG props, not CSS - it can't resolve var(--text-secondary)
+  // the way className-based styling can, so chart axis/tick colors need the
+  // theme's actual resolved value, live-updated when the theme toggles.
+  const { textSecondary, textMuted } = useThemeTokens();
   // fetchRealtimeAnalytics is called both from the mount effect below and
   // from the "Refresh Data" button - a plain effect-scoped `cancelled` flag
   // can't guard the button-triggered call, so a request-id ref tracks which
@@ -183,7 +188,7 @@ export default function AnalyticsView() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-[2rem] font-extrabold">Real-Time Data Analytics</h1>
-          <p className="text-[#94a3b8] text-[0.9rem]">Live sentiment metrics calculated dynamically from your journal entries</p>
+          <p className="text-[var(--text-secondary)] text-[0.9rem]">Live sentiment metrics calculated dynamically from your journal entries</p>
         </div>
         <button type="button" onClick={fetchRealtimeAnalytics} className="btn-secondary py-2 px-[0.85rem]">
           <RefreshCw size={14} className={loading ? 'animate-spin' : ''} />
@@ -203,31 +208,31 @@ export default function AnalyticsView() {
       <div className="grid grid-cols-[repeat(auto-fit,minmax(220px,1fr))] gap-5">
         <div className="glass-panel p-6 text-center">
           <Smile size={32} color={totalEntries > 0 ? ANALYTICS_MOOD_META[dominantMood]?.text || '#4ade80' : '#64748b'} className="mb-[0.4rem]" />
-          <div className="text-[0.8rem] text-[#94a3b8]">Dominant Real-Time Mood</div>
+          <div className="text-[0.8rem] text-[var(--text-secondary)]">Dominant Real-Time Mood</div>
           {totalEntries > 0 ? (
             <div className="text-[1.4rem] font-extrabold" style={{ color: ANALYTICS_MOOD_META[dominantMood]?.text || '#4ade80' }}>
               {dominantMood} {ANALYTICS_MOOD_META[dominantMood]?.emoji || '😊'}
             </div>
           ) : (
-            <div className="text-[1.4rem] font-extrabold text-[#64748b]">No data yet</div>
+            <div className="text-[1.4rem] font-extrabold text-[var(--text-muted)]">No data yet</div>
           )}
         </div>
 
         <div className="glass-panel p-6 text-center">
           <TrendingUp size={32} color="#38bdf8" className="mb-[0.4rem]" />
-          <div className="text-[0.8rem] text-[#94a3b8]">Live Positivity Rate</div>
+          <div className="text-[0.8rem] text-[var(--text-secondary)]">Live Positivity Rate</div>
           <div className="text-[1.5rem] font-extrabold text-[#38bdf8]">{positivityRate}%</div>
         </div>
 
         <div className="glass-panel p-6 text-center">
           <Flame size={32} color="#fde047" className="mb-[0.4rem]" />
-          <div className="text-[0.8rem] text-[#94a3b8]">Total Logged Entries</div>
+          <div className="text-[0.8rem] text-[var(--text-secondary)]">Total Logged Entries</div>
           <div className="text-[1.5rem] font-extrabold text-[#fde047]">{totalEntries} Entries</div>
         </div>
 
         <div className="glass-panel p-6 text-center">
           <Award size={32} color="#c084fc" className="mb-[0.4rem]" />
-          <div className="text-[0.8rem] text-[#94a3b8]">AI Level</div>
+          <div className="text-[0.8rem] text-[var(--text-secondary)]">AI Level</div>
           <div className="text-[1.4rem] font-extrabold text-[#c084fc]">{getAiLevel(totalEntries)}</div>
         </div>
       </div>
@@ -236,7 +241,7 @@ export default function AnalyticsView() {
         <div className="glass-panel p-12 text-center">
           <BarChart3 size={48} color="#64748b" className="mb-4 mx-auto" />
           <h3 className="text-[1.2rem] mb-2">No Data to Analyze Yet</h3>
-          <p className="text-[#94a3b8]">Write a few journal entries and your real mood trends, positivity stream, and emotional balance will appear here.</p>
+          <p className="text-[var(--text-secondary)]">Write a few journal entries and your real mood trends, positivity stream, and emotional balance will appear here.</p>
         </div>
       ) : (
         <>
@@ -245,7 +250,7 @@ export default function AnalyticsView() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="glass-panel p-8">
               <div className="flex items-center justify-between mb-6">
-                <h3 className="text-[1.15rem] font-bold text-[#f8fafc]">Live Positivity Stream</h3>
+                <h3 className="text-[1.15rem] font-bold text-[var(--text-primary)]">Live Positivity Stream</h3>
                 <span className="text-xs text-[#4ade80] bg-[rgba(74,222,128,0.15)] py-[0.2rem] px-[0.6rem] rounded-lg font-semibold">
                   ● Active Stream
                 </span>
@@ -259,9 +264,9 @@ export default function AnalyticsView() {
                         <stop offset="95%" stopColor="#a855f7" stopOpacity={0} />
                       </linearGradient>
                     </defs>
-                    <XAxis dataKey="day" stroke="#64748b" tick={{ fill: '#94a3b8' }} />
-                    <YAxis domain={[0, 100]} stroke="#64748b" tick={{ fill: '#94a3b8' }} />
-                    <Tooltip contentStyle={{ background: '#101426', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
+                    <XAxis dataKey="day" stroke={textMuted} tick={{ fill: textSecondary }} />
+                    <YAxis domain={[0, 100]} stroke={textMuted} tick={{ fill: textSecondary }} />
+                    <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)' }} />
                     <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#scoreGlow)" />
                   </AreaChart>
                 </ResponsiveContainer>
@@ -269,13 +274,13 @@ export default function AnalyticsView() {
             </div>
 
             <div className="glass-panel p-8">
-              <h3 className="text-[1.15rem] font-bold text-[#f8fafc] mb-6">Emotional Balance Radar Wheel</h3>
+              <h3 className="text-[1.15rem] font-bold text-[var(--text-primary)] mb-6">Emotional Balance Radar Wheel</h3>
               <div className="w-full h-[260px]">
                 <ResponsiveContainer>
                   <RadarChart outerRadius={90} data={radarData}>
                     <PolarGrid stroke="rgba(255,255,255,0.1)" />
-                    <PolarAngleAxis dataKey="subject" stroke="#94a3b8" tick={{ fill: '#94a3b8', fontSize: 11 }} />
-                    <PolarRadiusAxis angle={30} domain={[0, 15]} stroke="#64748b" />
+                    <PolarAngleAxis dataKey="subject" stroke={textSecondary} tick={{ fill: textSecondary, fontSize: 11 }} />
+                    <PolarRadiusAxis angle={30} domain={[0, 15]} stroke={textMuted} />
                     <Radar name="Mood Spectrum" dataKey="A" stroke="#a855f7" fill="#a855f7" fillOpacity={0.5} />
                   </RadarChart>
                 </ResponsiveContainer>
@@ -284,12 +289,12 @@ export default function AnalyticsView() {
           </div>
 
           <div className="glass-panel p-8">
-            <h3 className="text-[1.2rem] font-bold text-[#f8fafc] mb-6">Real-Time Mood Frequency Breakdown</h3>
+            <h3 className="text-[1.2rem] font-bold text-[var(--text-primary)] mb-6">Real-Time Mood Frequency Breakdown</h3>
             <div className="w-full h-[260px]">
               <ResponsiveContainer>
                 <BarChart data={moodBreakdown}>
-                  <XAxis dataKey="name" stroke="#64748b" tick={{ fill: '#94a3b8' }} />
-                  <YAxis stroke="#64748b" tick={{ fill: '#94a3b8' }} />
+                  <XAxis dataKey="name" stroke={textMuted} tick={{ fill: textSecondary }} />
+                  <YAxis stroke={textMuted} tick={{ fill: textSecondary }} />
                   <Tooltip contentStyle={{ background: '#101426', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
                   <Bar dataKey="value" radius={[8, 8, 0, 0]} shape={<CustomBarShape />} />
                 </BarChart>
@@ -299,21 +304,21 @@ export default function AnalyticsView() {
 
           {insights && (
             <div className="glass-panel p-8">
-              <h3 className="text-[1.2rem] font-bold text-[#f8fafc] mb-6">Deeper Insights</h3>
+              <h3 className="text-[1.2rem] font-bold text-[var(--text-primary)] mb-6">Deeper Insights</h3>
               <div className="grid grid-cols-[repeat(auto-fit,minmax(200px,1fr))] gap-5 mb-6">
                 <div className="text-center">
                   <Flame size={26} color="#fde047" className="mb-2 mx-auto" />
-                  <div className="text-[0.8rem] text-[#94a3b8]">Longest Streak</div>
+                  <div className="text-[0.8rem] text-[var(--text-secondary)]">Longest Streak</div>
                   <div className="text-[1.2rem] font-extrabold text-[#fde047]">{insights.longestStreakDays} Days</div>
                 </div>
                 <div className="text-center">
                   <PenLine size={26} color="#38bdf8" className="mb-2 mx-auto" />
-                  <div className="text-[0.8rem] text-[#94a3b8]">Writing Frequency</div>
+                  <div className="text-[0.8rem] text-[var(--text-secondary)]">Writing Frequency</div>
                   <div className="text-[1.2rem] font-extrabold text-[#38bdf8]">{insights.writingFrequency}</div>
                 </div>
                 <div className="text-center">
                   <CalendarDays size={26} color="#4ade80" className="mb-2 mx-auto" />
-                  <div className="text-[0.8rem] text-[#94a3b8]">Most Productive Day{insights.mostProductiveDays.length !== 1 ? 's' : ''}</div>
+                  <div className="text-[0.8rem] text-[var(--text-secondary)]">Most Productive Day{insights.mostProductiveDays.length !== 1 ? 's' : ''}</div>
                   <div className="text-[1.2rem] font-extrabold text-[#4ade80]">
                     {insights.mostProductiveDays.length > 0 ? insights.mostProductiveDays.join(', ') : 'N/A'}
                   </div>
@@ -321,7 +326,7 @@ export default function AnalyticsView() {
               </div>
               {insights.topTopics.length > 0 && (
                 <div>
-                  <div className="text-[0.8rem] text-[#94a3b8] mb-2 flex items-center gap-1"><Hash size={14} /> Top Topics</div>
+                  <div className="text-[0.8rem] text-[var(--text-secondary)] mb-2 flex items-center gap-1"><Hash size={14} /> Top Topics</div>
                   <div className="flex flex-wrap gap-2">
                     {insights.topTopics.map((topic) => (
                       <span key={topic} className="text-xs bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.35)] text-[#818cf8] py-1 px-3 rounded-full">

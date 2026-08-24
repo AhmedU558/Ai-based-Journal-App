@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { calculateStreak } from '@/lib/journalStats';
 import { hasUsedAi } from '@/lib/achievementTracking';
 import { journalService } from '@/services/journalService';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 interface AchievementsModalProps {
   isOpen: boolean;
@@ -56,6 +57,8 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
     };
   }, [isOpen]);
 
+  const panelRef = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const journalCount = journals.length;
@@ -100,11 +103,16 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
         className="fixed inset-0 bg-black/65 backdrop-blur-[8px] z-[9999] flex items-center justify-center p-6"
       >
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Journaling Achievements"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[580px] p-7 flex flex-col gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+          className="glass-panel w-full max-w-[580px] p-7 flex flex-col gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.5)] outline-none"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -114,10 +122,10 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
               </div>
               <div>
                 <h2 className="text-[1.3rem] font-bold">Journaling Achievements</h2>
-                <span className="text-xs text-[#94a3b8]">Milestones unlocked as you reflect</span>
+                <span className="text-xs text-[var(--text-secondary)]">Milestones unlocked as you reflect</span>
               </div>
             </div>
-            <button onClick={onClose} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer" aria-label="Close">
               <X size={20} />
             </button>
           </div>
@@ -139,16 +147,16 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
                     'p-5 rounded-2xl flex items-start gap-[0.85rem]',
                     b.unlocked
                       ? 'bg-[rgba(99,102,241,0.12)] border border-[rgba(99,102,241,0.3)] opacity-100'
-                      : 'bg-white/[0.03] border border-white/[0.06] opacity-50'
+                      : 'bg-[var(--text-primary)]/[0.03] border border-[var(--text-primary)]/[0.06] opacity-50'
                   )}
                 >
-                  <div className="p-2 rounded-xl bg-white/[0.06]">{b.icon}</div>
+                  <div className="p-2 rounded-xl bg-[var(--text-primary)]/[0.06]">{b.icon}</div>
                   <div>
                     <div className="flex items-center gap-[0.4rem] mb-[0.2rem]">
-                      <h4 className="text-[0.95rem] font-bold text-[#f8fafc]">{b.title}</h4>
+                      <h4 className="text-[0.95rem] font-bold text-[var(--text-primary)]">{b.title}</h4>
                       {b.unlocked && <CheckCircle2 size={14} color="#4ade80" />}
                     </div>
-                    <p className="text-xs text-[#94a3b8] leading-[1.3]">{b.desc}</p>
+                    <p className="text-xs text-[var(--text-secondary)] leading-[1.3]">{b.desc}</p>
                   </div>
                 </div>
               ))}

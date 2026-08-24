@@ -50,7 +50,7 @@ class JwtAuthenticationFilterTest {
     }
 
     @Test
-    void filter_ExcludedLoginPath_BypassesAuthAndForwardsUnchanged() {
+    void filter_ExcludedLoginPath_BypassesAuthAndForwards() {
         MockServerWebExchange exchange = MockServerWebExchange.from(
                 MockServerHttpRequest.post("/api/v1/auth/login"));
         GatewayFilterChain chain = mock(GatewayFilterChain.class);
@@ -58,8 +58,29 @@ class JwtAuthenticationFilterTest {
 
         StepVerifier.create(filter().filter(exchange, chain)).verifyComplete();
 
-        verify(chain).filter(exchange);
+        verify(chain).filter(any());
         assertThat(exchange.getResponse().getStatusCode()).isNull();
+    }
+
+    @Test
+    void filter_ExcludedPath_StripsForgedTrustedIdentityHeaders() {
+        // Regression guard: an excluded/public path never validates a JWT, so
+        // nothing here ever derives a real userId/email - but before this fix,
+        // whatever X-User-Id/X-User-Email a client sent passed straight
+        // through unmodified to the downstream service.
+        MockServerWebExchange exchange = MockServerWebExchange.from(
+                MockServerHttpRequest.post("/api/v1/auth/login")
+                        .header("X-User-Id", "999")
+                        .header("X-User-Email", "attacker@example.com"));
+        GatewayFilterChain chain = mock(GatewayFilterChain.class);
+        when(chain.filter(any())).thenReturn(Mono.empty());
+
+        StepVerifier.create(filter().filter(exchange, chain)).verifyComplete();
+
+        ArgumentCaptor<ServerWebExchange> captor = ArgumentCaptor.forClass(ServerWebExchange.class);
+        verify(chain).filter(captor.capture());
+        assertThat(captor.getValue().getRequest().getHeaders().getFirst("X-User-Id")).isNull();
+        assertThat(captor.getValue().getRequest().getHeaders().getFirst("X-User-Email")).isNull();
     }
 
     @Test
@@ -87,7 +108,7 @@ class JwtAuthenticationFilterTest {
 
         StepVerifier.create(filter().filter(exchange, chain)).verifyComplete();
 
-        verify(chain).filter(exchange);
+        verify(chain).filter(any());
         assertThat(exchange.getResponse().getStatusCode()).isNull();
     }
 

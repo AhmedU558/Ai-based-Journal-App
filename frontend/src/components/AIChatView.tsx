@@ -130,7 +130,7 @@ export default function AIChatView() {
           <h1 className="text-[1.8rem] font-extrabold flex items-center gap-2">
             <Sparkles color="#818cf8" size={24} /> AI Writing & Wellness Companion
           </h1>
-          <p className="text-[#94a3b8] text-[0.85rem]">Your personal companion for reflection, writing help, and support</p>
+          <p className="text-[var(--text-secondary)] text-[0.85rem]">Your personal companion for reflection, writing help, and support</p>
         </div>
         <button
           type="button"
@@ -144,7 +144,7 @@ export default function AIChatView() {
 
       {/* Preset Prompts Bar */}
       <div className="flex gap-2 overflow-x-auto pb-3 mb-4">
-        <span className="text-xs text-[#64748b] font-semibold flex items-center gap-1">
+        <span className="text-xs text-[var(--text-muted)] font-semibold flex items-center gap-1">
           <Lightbulb size={12} color="#fde047" /> Ideas:
         </span>
         {PRESET_PROMPTS.map((p) => (
@@ -172,10 +172,10 @@ export default function AIChatView() {
             <div className="max-w-[75%] relative">
               <div
                 className={cn(
-                  'text-white py-[0.9rem] px-[1.15rem] text-[0.95rem] leading-[1.5] shadow-[0_4px_12px_rgba(0,0,0,0.1)]',
+                  'text-[var(--text-primary)] py-[0.9rem] px-[1.15rem] text-[0.95rem] leading-[1.5] shadow-[0_4px_12px_rgba(0,0,0,0.1)]',
                   msg.sender === 'user'
                     ? 'bg-[linear-gradient(135deg,#6366f1,#4f46e5)] border-0 rounded-[18px_18px_4px_18px]'
-                    : 'bg-white/5 border border-white/10 rounded-[18px_18px_18px_4px]'
+                    : 'bg-[var(--text-primary)]/5 border border-[var(--text-primary)]/10 rounded-[18px_18px_18px_4px]'
                 )}
               >
                 {msg.text}
@@ -185,7 +185,7 @@ export default function AIChatView() {
                 <button
                   type="button"
                   onClick={() => handleCopyText(msg.text, msg.id)}
-                  className="absolute top-[0.4rem] right-[-2rem] bg-transparent border-0 text-[#64748b] cursor-pointer p-[0.2rem]"
+                  className="absolute top-[0.4rem] right-[-2rem] bg-transparent border-0 text-[var(--text-muted)] cursor-pointer p-[0.2rem]"
                   title="Copy text"
                 >
                   {copiedId === msg.id ? <Check size={14} color="#4ade80" /> : <Copy size={14} />}
@@ -194,7 +194,7 @@ export default function AIChatView() {
             </div>
 
             {msg.sender === 'user' && (
-              <div className="w-9 h-9 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
+              <div className="w-9 h-9 rounded-xl bg-[var(--text-primary)]/10 flex items-center justify-center shrink-0">
                 <User size={20} color="#cbd5e1" />
               </div>
             )}
@@ -206,7 +206,7 @@ export default function AIChatView() {
             <div className="w-9 h-9 rounded-xl bg-[linear-gradient(135deg,#6366f1,#a855f7)] flex items-center justify-center">
               <Bot size={20} color="#ffffff" />
             </div>
-            <div className="bg-white/5 py-3 px-5 rounded-[18px] text-[#94a3b8] text-[0.9rem] flex items-center gap-2">
+            <div className="bg-[var(--text-primary)]/5 py-3 px-5 rounded-[18px] text-[var(--text-secondary)] text-[0.9rem] flex items-center gap-2">
               <Sparkles size={14} className="animate-spin" color="#818cf8" /> AI is thinking...
             </div>
           </div>
