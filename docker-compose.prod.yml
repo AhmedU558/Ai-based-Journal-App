@@ -120,8 +120,19 @@ services:
     build: ./auth-service
     container_name: auth-service-prod
     restart: always
+    # Bound to localhost only, same reasoning as gateway-service/
+    # python-ai-service/frontend above - this and the other 8 business
+    # services below were the one class of service that never got this fix
+    # applied. Publishing them on 0.0.0.0 let anyone bypass the gateway
+    # entirely and hit e.g. /api/v1/auth/login directly, defeating the
+    # Redis-backed RequestRateLimiter that only exists as a gateway route
+    # filter - auth-service's own SecurityConfig permitAll()s these same
+    # paths with no rate limiting of its own, so a direct hit had no limit
+    # at all. ai-service reaches journal-service etc. via the internal
+    # Docker network (see e.g. JOURNAL_SERVICE_URL-shaped env vars below),
+    # which never needed the host port published either.
     ports:
-      - "8081:8081"
+      - "127.0.0.1:8081:8081"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/auth_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
@@ -138,7 +149,7 @@ services:
     container_name: user-service-prod
     restart: always
     ports:
-      - "8082:8082"
+      - "127.0.0.1:8082:8082"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/user_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
@@ -153,7 +164,7 @@ services:
     container_name: journal-service-prod
     restart: always
     ports:
-      - "8083:8083"
+      - "127.0.0.1:8083:8083"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/journal_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
@@ -172,7 +183,7 @@ services:
     container_name: ai-service-prod
     restart: always
     ports:
-      - "8084:8084"
+      - "127.0.0.1:8084:8084"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/ai_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
@@ -191,7 +202,7 @@ services:
     container_name: search-service-prod
     restart: always
     ports:
-      - "8085:8085"
+      - "127.0.0.1:8085:8085"
     environment:
       SPRING_ELASTICSEARCH_URIS: http://elasticsearch:9200
       SPRING_RABBITMQ_HOST: rabbitmq
@@ -207,7 +218,7 @@ services:
     container_name: recommendation-service-prod
     restart: always
     ports:
-      - "8086:8086"
+      - "127.0.0.1:8086:8086"
     environment:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
 
@@ -216,7 +227,7 @@ services:
     container_name: notification-service-prod
     restart: always
     ports:
-      - "8087:8087"
+      - "127.0.0.1:8087:8087"
     environment:
       SPRING_DATASOURCE_URL: "jdbc:mysql://mysql:3306/notification_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true"
       SPRING_DATASOURCE_USERNAME: root
@@ -238,7 +249,7 @@ services:
     container_name: analytics-service-prod
     restart: always
     ports:
-      - "8088:8088"
+      - "127.0.0.1:8088:8088"
     environment:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
 
@@ -247,7 +258,7 @@ services:
     container_name: file-service-prod
     restart: always
     ports:
-      - "8089:8089"
+      - "127.0.0.1:8089:8089"
     environment:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
 
