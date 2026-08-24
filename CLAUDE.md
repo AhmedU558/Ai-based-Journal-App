@@ -4,7 +4,7 @@ Repo-specific context for Claude Code (or any agent/contributor) working in this
 
 ## What this is
 
-A 13-module Maven multi-module Spring Boot monorepo (`common-library` + 12 deployable services) behind a Spring Cloud Gateway, plus a Python Flask AI microservice and a React 19/TypeScript frontend. Java 21, Spring Boot 3.3.2, Spring Cloud 2023.0.3.
+A 12-module Maven multi-module Spring Boot monorepo (`common-library` + 11 deployable services) behind a Spring Cloud Gateway, plus a Python Flask AI microservice and a React 19/TypeScript frontend. Java 21, Spring Boot 3.3.2, Spring Cloud 2023.0.3. (`config-server` was removed - it was never actually imported by any service, just an idle Spring Cloud Config server consuming RAM and delaying gateway startup via `depends_on`.)
 
 ## The one thing worth internalizing before touching anything
 
@@ -25,4 +25,15 @@ JUnit 5 + `MockitoExtension`, `@Mock`/`@InjectMocks` on the `*Impl` class (not t
 
 ## Branch status (check `git log --all --oneline` / `git branch -a` for current truth - this rots fast)
 
-Phases 1-5 (security hardening, TS/Tailwind/shadcn frontend migration, real Elasticsearch search, router migration, dashboard/editor fixes) are merged to `main`. Phases 6 (DevOps/CI + K8s manifests) and 7 (real TOTP 2FA) are complete and pushed but **not yet merged** as of this writing - `k8s/` on `main` still has the old 2-service manifest; the real per-service manifests only exist on `devops/ci-and-k8s-manifests`. Phase 7's MFA/password-change/`/me` endpoints on `auth-service`, and the `additionalPublicPaths` constructor parameter on `common-library`'s `JwtAuthenticationFilter`, only exist on `feature/enterprise-settings-2fa`. Don't assume either is present on `main` without checking.
+All phases through the most recent bug-hunt pass are merged to `main`, including real TOTP 2FA (`auth-service`'s MFA/password-change/`/me` endpoints, `common-library`'s `JwtAuthenticationFilter.additionalPublicPaths`) and the full per-service K8s manifest set under `k8s/`. Don't assume this list stays current for long - re-check `git log --all --oneline` before relying on it.
+
+## Git commit attribution rules
+
+- NEVER add a `Co-Authored-By:` trailer to any Git commit.
+- NEVER add `Co-Authored-By: Claude`, `Co-Authored-By: Claude Code`, `Co-Authored-By: Claude Sonnet`, `Co-Authored-By: Anthropic`, or any other AI/Anthropic attribution to commit messages.
+- Do not identify Claude, Claude Code, Anthropic, or any AI system as a commit author or co-author.
+- Preserve the repository owner's existing Git identity (`user.name` and `user.email`).
+- NEVER modify `git config user.name` or `git config user.email` unless the maintainer explicitly asks you to.
+- Before creating a commit, verify that the commit message contains no `Co-Authored-By:` trailer referring to Claude, Anthropic, or any AI system.
+- If an automatically generated AI attribution appears in the commit message, remove it before committing.
+- Follow the existing repository commit convention: `type(scope): summary`.

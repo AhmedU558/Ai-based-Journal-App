@@ -1,6 +1,6 @@
 # 🚀 AI-Powered Journaling Platform - Client Testing Guide
 
-Welcome to the **AI-Powered Journaling Platform**! This modern SaaS application provides real-time sentiment analysis, AI writing assistance, multi-format exports, and dynamic data analytics.
+Welcome to the **AI-Powered Journaling Platform**! This modern SaaS application provides real-time sentiment analysis, AI writing assistance, and dynamic data analytics.
 
 ---
 
@@ -38,11 +38,7 @@ Then visit **`http://localhost:3000`**.
 - Navigate to **"Mood Analytics"** in the sidebar.
 - Inspect the **Emotional Balance Radar Wheel**, live positivity trend stream, and sentiment breakdown.
 
-### 4. 📥 Multi-Format Exporters
-- Navigate to **"My Journals"**.
-- Click **Export MD**, **Export JSON**, or **Export CSV** to download your full journal library.
-
-### 5. 🛡️ 10-Minute Session Security
+### 4. 🛡️ 10-Minute Session Security
 - The top header displays active 10-minute session status. For security, sessions automatically require re-authentication after 10 minutes of inactivity.
 
 ---

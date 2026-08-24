@@ -26,6 +26,8 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
+    volumes:
+      - elasticsearch_data_prod:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 10s
@@ -86,15 +88,6 @@ services:
     ports:
       - "8761:8761"
 
-  config-server:
-    build: ./config-server
-    container_name: config-server-prod
-    restart: always
-    ports:
-      - "8888:8888"
-    depends_on:
-      - discovery-server
-
   gateway-service:
     build: ./gateway-service
     container_name: gateway-service-prod
@@ -110,8 +103,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
     depends_on:
       discovery-server:
-        condition: service_started
-      config-server:
         condition: service_started
       redis:
         condition: service_healthy
@@ -261,6 +252,8 @@ services:
       - "127.0.0.1:8089:8089"
     environment:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set}
+    volumes:
+      - file_service_uploads_prod:/app/uploads
 
   frontend:
     build: ./frontend
@@ -276,3 +269,5 @@ services:
 
 volumes:
   mysql_data_prod:
+  elasticsearch_data_prod:
+  file_service_uploads_prod:

@@ -75,6 +75,31 @@ jobs:
         working-directory: frontend
         run: npm run build
 
+  mobile-test:
+    name: Typecheck & Test Mobile App (Mindora)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: mobile/package-lock.json
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: npm ci
+
+      - name: Typecheck
+        working-directory: mobile
+        run: npm run typecheck
+
+      - name: Run tests
+        working-directory: mobile
+        run: npm run test -- --ci
+
   python-smoke-test:
     name: Verify Python Flask AI Microservice
     runs-on: ubuntu-latest
@@ -89,8 +114,9 @@ jobs:
       - name: Install & smoke-test AI engine
         working-directory: python-ai-service
         run: |
-          pip install -r requirements.txt
+          pip install -r requirements-dev.txt
           python -c "import app; print('AI Engine Initialized Cleanly')"
+          python -m pytest tests/ -v
 
   docker-build-push:
     name: Build & Push Docker Images
@@ -100,9 +126,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # 12 Java Spring Boot services - each needs a pre-built jar from backend-test
-          - service: config-server
-            needs_jar: true
+          # 11 Java Spring Boot services - each needs a pre-built jar from backend-test
           - service: discovery-server
             needs_jar: true
           - service: gateway-service

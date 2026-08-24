@@ -2,7 +2,7 @@
 
 A committed, versioned snapshot of each service's live OpenAPI 3 spec - complements the always-up-to-date but not-diffable live specs each service serves at `/v3/api-docs` (and renders at `/swagger-ui.html`) while running.
 
-Captured 2026-08-14 from a locally running `docker compose` stack on `main` (commit right after the Postman collection dedup). `gateway-service`, `config-server`, and `discovery-server` are excluded - the first is a pure routing proxy with no `springdoc-openapi` dependency of its own, and the latter two are unmodified Spring Cloud Config/Eureka servers with no custom endpoints to document.
+Captured 2026-08-14 from a locally running `docker compose` stack on `main` (commit right after the Postman collection dedup). `gateway-service` and `discovery-server` are excluded - the first is a pure routing proxy with no `springdoc-openapi` dependency of its own, and the latter is an unmodified Eureka server with no custom endpoints to document. (`config-server` was excluded for the same reason at capture time and has since been removed from the platform entirely - it was never actually imported by any service.)
 
 ## Regenerating
 

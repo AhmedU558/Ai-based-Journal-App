@@ -24,6 +24,8 @@ services:
       - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
     ports:
       - "9200:9200"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
     healthcheck:
       test: ["CMD-SHELL", "curl -s http://localhost:9200/_cluster/health | grep -q '\"status\":\"green\"\\|\"status\":\"yellow\"'"]
       interval: 10s
@@ -59,8 +61,13 @@ services:
   python-ai-service:
     build: ./python-ai-service
     container_name: python-ai-service
+    # Bound to localhost only: this Flask service has no authentication of
+    # its own (JWT validation happens one layer up, in ai-service) - same
+    # reasoning already applied to the prod compose file's python-ai-service
+    # block. ai-service reaches it via the internal Docker network
+    # (FLASK_AI_URL), which never needed the host port published at all.
     ports:
-      - "5000:5000"
+      - "127.0.0.1:5000:5000"
     # Both genuinely optional - the /chat, /mood, and /summarize routes all
     # fall back to real (non-fake) keyword/rule-based logic when unset, so
     # there's no reason to require either for local dev. Previously neither
@@ -80,14 +87,6 @@ services:
     ports:
       - "8761:8761"
 
-  config-server:
-    build: ./config-server
-    container_name: config-server
-    ports:
-      - "8888:8888"
-    depends_on:
-      - discovery-server
-
   gateway-service:
     build: ./gateway-service
     container_name: gateway-service
@@ -97,8 +96,6 @@ services:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set - copy .env.example to .env and fill it in}
     depends_on:
       discovery-server:
-        condition: service_started
-      config-server:
         condition: service_started
       redis:
         condition: service_healthy
@@ -118,6 +115,11 @@ services:
       # TurnstileService skip verification rather than block every
       # register/login, so local dev never needs a real Cloudflare account.
       TURNSTILE_SECRET_KEY: ${TURNSTILE_SECRET_KEY:-}
+      # This whole stack runs over plain HTTP in local dev (no TLS) - a
+      # Secure=true refresh-token cookie would silently never be set/sent by
+      # the browser over http://localhost, breaking login/refresh entirely.
+      # Prod's compose file has no override, so it keeps the default true.
+      AUTH_COOKIE_SECURE: "false"
     depends_on:
       mysql:
         condition: service_healthy
@@ -226,6 +228,8 @@ services:
       - "8089:8089"
     environment:
       JWT_SECRET: ${JWT_SECRET:?JWT_SECRET must be set - copy .env.example to .env and fill it in}
+    volumes:
+      - file_service_uploads:/app/uploads
 
   frontend:
     build: ./frontend
@@ -237,3 +241,5 @@ services:
 
 volumes:
   mysql_data:
+  elasticsearch_data:
+  file_service_uploads:
