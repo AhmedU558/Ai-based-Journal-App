@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { calculateStreak } from '@/lib/journalStats';
 import { hasUsedAi } from '@/lib/achievementTracking';
 import { journalService } from '@/services/journalService';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 interface AchievementsModalProps {
   isOpen: boolean;
@@ -56,6 +57,8 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
     };
   }, [isOpen]);
 
+  const panelRef = useModalA11y(isOpen, onClose);
+
   if (!isOpen) return null;
 
   const journalCount = journals.length;
@@ -100,11 +103,16 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
         className="fixed inset-0 bg-black/65 backdrop-blur-[8px] z-[9999] flex items-center justify-center p-6"
       >
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Journaling Achievements"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[580px] p-7 flex flex-col gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+          className="glass-panel w-full max-w-[580px] p-7 flex flex-col gap-5 shadow-[0_24px_48px_rgba(0,0,0,0.5)] outline-none"
         >
           {/* Header */}
           <div className="flex items-center justify-between">
@@ -117,7 +125,7 @@ export default function AchievementsModal({ isOpen, onClose }: AchievementsModal
                 <span className="text-xs text-[var(--text-secondary)]">Milestones unlocked as you reflect</span>
               </div>
             </div>
-            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer" aria-label="Close">
               <X size={20} />
             </button>
           </div>

@@ -125,8 +125,8 @@ export default function SearchView() {
               onChange={(e) => setSortBy(e.target.value as SortBy)}
               className="bg-[var(--text-primary)]/5 border border-[var(--text-primary)]/10 text-[var(--text-primary)] py-[0.35rem] px-3 rounded-xl text-[0.8rem] cursor-pointer"
             >
-              <option value="newest" style={{ background: '#101426' }}>Newest First</option>
-              <option value="oldest" style={{ background: '#101426' }}>Oldest First</option>
+              <option value="newest" style={{ background: 'var(--bg-secondary)' }}>Newest First</option>
+              <option value="oldest" style={{ background: 'var(--bg-secondary)' }}>Oldest First</option>
             </select>
           </div>
         </div>

@@ -48,6 +48,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
           onClick={() => setCollapsed(!collapsed)}
           className="bg-[var(--text-primary)]/[0.08] border border-[var(--text-primary)]/[0.12] text-[var(--text-secondary)] rounded-full w-7 h-7 flex items-center justify-center cursor-pointer shrink-0"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          aria-label={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
         </button>

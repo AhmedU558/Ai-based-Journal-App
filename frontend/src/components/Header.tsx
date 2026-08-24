@@ -56,6 +56,7 @@ export default function Header({
           onClick={onToggleTheme}
           className="bg-[var(--text-primary)]/5 border border-[var(--text-primary)]/10 p-2 rounded-xl text-[var(--text-primary)] cursor-pointer flex items-center justify-center"
           title="Toggle Dark / Light Theme"
+          aria-label={theme === 'light' ? 'Switch to dark theme' : 'Switch to light theme'}
         >
           {theme === 'light' ? <Moon size={18} color="#6366f1" /> : <Sun size={18} color="#f59e0b" />}
         </button>

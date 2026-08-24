@@ -96,6 +96,8 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
                 'p-[0.4rem] border-0 rounded-lg cursor-pointer',
                 viewMode === 'grid' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[var(--text-secondary)]'
               )}
+              aria-label="Grid view"
+              aria-pressed={viewMode === 'grid'}
             >
               <LayoutGrid size={16} />
             </button>
@@ -105,6 +107,8 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
                 'p-[0.4rem] border-0 rounded-lg cursor-pointer',
                 viewMode === 'list' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[var(--text-secondary)]'
               )}
+              aria-label="List view"
+              aria-pressed={viewMode === 'list'}
             >
               <List size={16} />
             </button>

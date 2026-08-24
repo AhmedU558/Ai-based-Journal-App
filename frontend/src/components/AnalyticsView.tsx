@@ -266,7 +266,7 @@ export default function AnalyticsView() {
                     </defs>
                     <XAxis dataKey="day" stroke={textMuted} tick={{ fill: textSecondary }} />
                     <YAxis domain={[0, 100]} stroke={textMuted} tick={{ fill: textSecondary }} />
-                    <Tooltip contentStyle={{ background: '#101426', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px', color: '#fff' }} />
+                    <Tooltip contentStyle={{ background: 'var(--bg-secondary)', border: '1px solid var(--panel-border)', borderRadius: '12px', color: 'var(--text-primary)' }} />
                     <Area type="monotone" dataKey="score" stroke="#6366f1" strokeWidth={3} fillOpacity={1} fill="url(#scoreGlow)" />
                   </AreaChart>
                 </ResponsiveContainer>

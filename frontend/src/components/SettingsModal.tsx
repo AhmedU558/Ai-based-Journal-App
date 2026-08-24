@@ -9,6 +9,7 @@ import { adminService } from '@/services/adminService';
 import { fileService } from '@/services/fileService';
 import ThemeCustomizer from './ThemeCustomizer';
 import AvatarCropModal from './AvatarCropModal';
+import { useModalA11y } from '@/lib/useModalA11y';
 
 const MAX_AVATAR_SOURCE_BYTES = 10 * 1024 * 1024; // 10MB - generous for a phone photo, well under server limits
 
@@ -49,6 +50,7 @@ interface ProfileData {
 export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvatarChanged }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const isAdmin = authService.isAdmin();
+  const panelRef = useModalA11y(isOpen, onClose);
 
   if (!isOpen) return null;
 
@@ -59,16 +61,21 @@ export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvat
         className="fixed inset-0 bg-black/65 backdrop-blur-[8px] z-[9999] flex items-center justify-center p-6"
       >
         <motion.div
+          ref={panelRef}
+          role="dialog"
+          aria-modal="true"
+          aria-label="Account & System Settings"
+          tabIndex={-1}
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           exit={{ opacity: 0, scale: 0.95 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[780px] max-h-[85vh] flex flex-col overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
+          className="glass-panel w-full max-w-[780px] max-h-[85vh] flex flex-col overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.5)] outline-none"
         >
           {/* Modal Header */}
           <div className="flex items-center justify-between py-5 px-6 border-b border-b-[var(--text-primary)]/[0.08]">
             <h2 className="text-[1.3rem] font-bold">Account & System Settings</h2>
-            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer" aria-label="Close">
               <X size={20} />
             </button>
           </div>

@@ -29,6 +29,7 @@ interface SpeechRecognitionInstance extends EventTarget {
   onerror: (() => void) | null;
   onend: (() => void) | null;
   start: () => void;
+  stop: () => void;
 }
 type SpeechRecognitionConstructor = new () => SpeechRecognitionInstance;
 
@@ -126,6 +127,13 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
   const [tagInput, setTagInput] = useState('');
 
   const [isListening, setIsListening] = useState(false);
+  // Holds the live SpeechRecognition instance so the toggle-off path and the
+  // unmount-cleanup effect below can both actually stop it - previously the
+  // instance created in toggleSpeechRecognition's `else` branch was a local
+  // variable with nothing keeping a reference to it, so toggling off (or
+  // navigating away entirely) only flipped React state while the browser's
+  // real microphone stream kept listening in the background.
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
   const [detectingMood, setDetectingMood] = useState(false);
   // Shared "only the latest call wins" guard for mood detection - it's
   // triggered from two separate call sites (the debounced effect below and
@@ -186,6 +194,15 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
     return () => clearTimeout(timer);
   }, [content, isManualOverride]);
 
+  // Unmount cleanup - if the user navigates away mid-dictation, the browser's
+  // real microphone stream must stop too, not just the React state.
+  useEffect(() => {
+    return () => {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
+    };
+  }, []);
+
   const toggleSpeechRecognition = () => {
     const SpeechRecognitionCtor = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognitionCtor) {
@@ -194,6 +211,8 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
     }
 
     if (isListening) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setIsListening(false);
     } else {
       const recognition = new SpeechRecognitionCtor();
@@ -214,8 +233,15 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
         setContent((prev) => prev + ' ' + transcript);
       };
 
-      recognition.onerror = () => setIsListening(false);
-      recognition.onend = () => setIsListening(false);
+      recognition.onerror = () => {
+        recognitionRef.current = null;
+        setIsListening(false);
+      };
+      recognition.onend = () => {
+        recognitionRef.current = null;
+        setIsListening(false);
+      };
+      recognitionRef.current = recognition;
       recognition.start();
     }
   };

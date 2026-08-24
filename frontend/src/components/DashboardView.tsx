@@ -237,10 +237,10 @@ function DashboardJournalCard({ journal, onSelect, onDelete }: DashboardJournalC
         </span>
 
         <div className="flex items-center gap-[0.35rem]">
-          <button onClick={onSelect} className="btn-secondary p-[0.35rem] rounded-lg" title="Edit Entry">
+          <button onClick={onSelect} className="btn-secondary p-[0.35rem] rounded-lg" title="Edit Entry" aria-label="Edit entry">
             <Edit3 size={14} color="#38bdf8" />
           </button>
-          <button onClick={onDelete} className="btn-secondary p-[0.35rem] rounded-lg" title="Delete Entry">
+          <button onClick={onDelete} className="btn-secondary p-[0.35rem] rounded-lg" title="Delete Entry" aria-label="Delete entry">
             <Trash2 size={14} color="#f87171" />
           </button>
         </div>
