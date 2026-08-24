@@ -58,15 +58,15 @@ export default function NotificationsDrawer({
           exit={{ x: '100%' }}
           transition={{ type: 'spring', damping: 25, stiffness: 200 }}
           onClick={(e) => e.stopPropagation()}
-          className="glass-panel w-full max-w-[380px] h-screen rounded-none p-6 flex flex-col gap-5 shadow-[-12px_0_32px_rgba(0,0,0,0.4)] border-l border-l-white/10"
+          className="glass-panel w-full max-w-[380px] h-screen rounded-none p-6 flex flex-col gap-5 shadow-[-12px_0_32px_rgba(0,0,0,0.4)] border-l border-l-[var(--text-primary)]/10"
         >
           {/* Drawer Header */}
-          <div className="flex items-center justify-between border-b border-b-white/[0.08] pb-4">
+          <div className="flex items-center justify-between border-b border-b-[var(--text-primary)]/[0.08] pb-4">
             <div className="flex items-center gap-[0.65rem]">
               <Bell size={20} color="var(--accent-indigo, #6366f1)" />
               <h2 className="text-[1.2rem] font-bold">Notifications</h2>
             </div>
-            <button onClick={onClose} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
               <X size={20} />
             </button>
           </div>
@@ -97,13 +97,13 @@ export default function NotificationsDrawer({
                 return (
                   <div
                     key={item.id}
-                    className={`bg-white/[0.04] border border-white/[0.08] p-4 rounded-2xl flex gap-3 transition-all duration-200 ${item.read ? 'opacity-60' : ''}`}
+                    className={`bg-[var(--text-primary)]/[0.04] border border-[var(--text-primary)]/[0.08] p-4 rounded-2xl flex gap-3 transition-all duration-200 ${item.read ? 'opacity-60' : ''}`}
                   >
-                    <div className="p-2 rounded-[10px] bg-white/[0.06] h-fit">{meta.icon}</div>
+                    <div className="p-2 rounded-[10px] bg-[var(--text-primary)]/[0.06] h-fit">{meta.icon}</div>
                     <div className="flex-1">
                       <div className="flex items-center justify-between mb-1">
                         <h4 className="text-[0.9rem] font-semibold text-[var(--text-primary)]">{meta.label}</h4>
-                        <span className="text-[0.7rem] text-[#64748b]">{formatRelativeTime(item.createdAt)}</span>
+                        <span className="text-[0.7rem] text-[var(--text-muted)]">{formatRelativeTime(item.createdAt)}</span>
                       </div>
                       <p className="text-[0.8rem] text-[var(--text-secondary)] leading-[1.4]">{item.message}</p>
                     </div>

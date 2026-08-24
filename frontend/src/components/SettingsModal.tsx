@@ -66,9 +66,9 @@ export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvat
           className="glass-panel w-full max-w-[780px] max-h-[85vh] flex flex-col overflow-hidden shadow-[0_24px_48px_rgba(0,0,0,0.5)]"
         >
           {/* Modal Header */}
-          <div className="flex items-center justify-between py-5 px-6 border-b border-b-white/[0.08]">
+          <div className="flex items-center justify-between py-5 px-6 border-b border-b-[var(--text-primary)]/[0.08]">
             <h2 className="text-[1.3rem] font-bold">Account & System Settings</h2>
-            <button onClick={onClose} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onClose} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
               <X size={20} />
             </button>
           </div>
@@ -76,7 +76,7 @@ export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvat
           {/* Modal Body: Sidebar Tabs + Main View */}
           <div className="flex flex-col sm:flex-row flex-1 overflow-hidden">
             {/* Inner Settings Sidebar - horizontal scrollable tab row on mobile, vertical list from sm: up */}
-            <div className="w-full sm:w-[220px] shrink-0 border-b sm:border-b-0 sm:border-r border-white/[0.08] p-4 flex flex-row sm:flex-col gap-[0.35rem] overflow-x-auto sm:overflow-x-visible">
+            <div className="w-full sm:w-[220px] shrink-0 border-b sm:border-b-0 sm:border-r border-[var(--text-primary)]/[0.08] p-4 flex flex-row sm:flex-col gap-[0.35rem] overflow-x-auto sm:overflow-x-visible">
               <SettingsTabBtn icon={<User size={16} />} label="Profile & User" active={activeTab === 'profile'} onClick={() => setActiveTab('profile')} />
               <SettingsTabBtn icon={<ShieldCheck size={16} />} label="Security & Sessions" active={activeTab === 'security'} onClick={() => setActiveTab('security')} />
               <SettingsTabBtn icon={<Palette size={16} />} label="Appearance & Themes" active={activeTab === 'appearance'} onClick={() => setActiveTab('appearance')} />
@@ -93,7 +93,7 @@ export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvat
               {activeTab === 'appearance' && (
                 <div className="flex flex-col gap-5">
                   <h3 className="text-[1.1rem] font-bold">Appearance & Theme Palettes</h3>
-                  <p className="text-[0.85rem] text-[#94a3b8]">
+                  <p className="text-[0.85rem] text-[var(--text-secondary)]">
                     Choose your preferred color accent palette for glassmorphism panels.
                   </p>
                   <ThemeCustomizer />
@@ -291,15 +291,15 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
           {avatarPreviewUrl ? (
             <img src={avatarPreviewUrl} alt="Profile avatar" className="w-16 h-16 rounded-full object-cover" />
           ) : (
-            <div className="w-16 h-16 rounded-full bg-white/[0.06] flex items-center justify-center">
-              <User size={28} className="text-[#64748b]" />
+            <div className="w-16 h-16 rounded-full bg-[var(--text-primary)]/[0.06] flex items-center justify-center">
+              <User size={28} className="text-[var(--text-muted)]" />
             </div>
           )}
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
             disabled={avatarUploading}
-            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#6366f1] flex items-center justify-center border-2 border-[#0f172a]"
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#6366f1] flex items-center justify-center border-2 border-[var(--panel-bg)]"
             title="Change avatar"
           >
             <Camera size={12} color="white" />
@@ -314,7 +314,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
         </div>
         <div>
           <div className="text-[0.85rem] font-semibold">Profile Photo</div>
-          <div className="text-xs text-[#64748b]">{avatarUploading ? 'Uploading...' : 'PNG or JPG, click the camera to change'}</div>
+          <div className="text-xs text-[var(--text-muted)]">{avatarUploading ? 'Uploading...' : 'PNG or JPG, click the camera to change'}</div>
           {profile.avatarUrl && !avatarUploading && (
             <button
               type="button"
@@ -337,15 +337,15 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
       )}
 
       <div>
-        <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">Username</label>
+        <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">Username</label>
         <input type="text" className="glass-input" value={currentUser?.username || ''} readOnly />
       </div>
       <div>
-        <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">Primary Email</label>
+        <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">Primary Email</label>
         <input type="email" className="glass-input" value={currentUser?.email || ''} readOnly />
       </div>
       <div>
-        <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">Bio</label>
+        <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">Bio</label>
         <textarea
           className="glass-input"
           rows={3}
@@ -355,7 +355,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">Phone Number</label>
+          <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">Phone Number</label>
           <input
             type="text"
             className="glass-input"
@@ -364,7 +364,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
           />
         </div>
         <div>
-          <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">Country</label>
+          <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">Country</label>
           <input
             type="text"
             className="glass-input"
@@ -374,7 +374,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
         </div>
       </div>
       <div>
-        <label className="text-[0.8rem] text-[#94a3b8] block mb-[0.35rem]">City</label>
+        <label className="text-[0.8rem] text-[var(--text-secondary)] block mb-[0.35rem]">City</label>
         <input
           type="text"
           className="glass-input"
@@ -383,7 +383,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
         />
       </div>
 
-      {message && <p className="text-[0.8rem] text-[#94a3b8]">{message}</p>}
+      {message && <p className="text-[0.8rem] text-[var(--text-secondary)]">{message}</p>}
 
       <button type="submit" disabled={saving} className="btn-primary self-start px-6">
         {saving ? 'Saving...' : 'Save Profile'}
@@ -477,10 +477,10 @@ function LoginHistorySection({ isOpen }: { isOpen: boolean }) {
   }, [isOpen]);
 
   return (
-    <div className="flex flex-col gap-3 p-[0.85rem] bg-white/[0.03] rounded-xl">
+    <div className="flex flex-col gap-3 p-[0.85rem] bg-[var(--text-primary)]/[0.03] rounded-xl">
       <div>
         <div className="text-[0.9rem] font-semibold">Recent Logins</div>
-        <div className="text-xs text-[#64748b]">The last few times this account signed in, successful or not.</div>
+        <div className="text-xs text-[var(--text-muted)]">The last few times this account signed in, successful or not.</div>
       </div>
 
       {error ? (
@@ -491,16 +491,16 @@ function LoginHistorySection({ isOpen }: { isOpen: boolean }) {
       ) : entries === null ? (
         <div className="skeleton-pulse h-16 rounded-lg" />
       ) : entries.length === 0 ? (
-        <div className="text-[0.8rem] text-[#64748b]">No login history yet.</div>
+        <div className="text-[0.8rem] text-[var(--text-muted)]">No login history yet.</div>
       ) : (
         <div className="flex flex-col gap-2">
           {entries.map((entry) => (
-            <div key={entry.id} className="flex items-center justify-between gap-3 py-2 border-b border-white/[0.05] last:border-b-0">
+            <div key={entry.id} className="flex items-center justify-between gap-3 py-2 border-b border-[var(--text-primary)]/[0.05] last:border-b-0">
               <div className="min-w-0">
-                <div className="text-[0.82rem] text-[#e2e8f0]">
+                <div className="text-[0.82rem] text-[var(--text-secondary)]">
                   {new Date(entry.loginTime).toLocaleString()}
                 </div>
-                <div className="text-xs text-[#64748b] truncate">
+                <div className="text-xs text-[var(--text-muted)] truncate">
                   {entry.ipAddress || 'Unknown IP'}
                   {entry.userAgent ? ` · ${entry.userAgent}` : ''}
                 </div>
@@ -563,11 +563,11 @@ function EmailVerificationSection({ emailVerified, onVerified }: EmailVerificati
   };
 
   return (
-    <div className="flex flex-col gap-3 p-[0.85rem] bg-white/[0.03] rounded-xl">
+    <div className="flex flex-col gap-3 p-[0.85rem] bg-[var(--text-primary)]/[0.03] rounded-xl">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[0.9rem] font-semibold">Email Verification</div>
-          <div className="text-xs text-[#64748b]">Confirm you own the email address on this account.</div>
+          <div className="text-xs text-[var(--text-muted)]">Confirm you own the email address on this account.</div>
         </div>
         <span
           className={cn(
@@ -592,7 +592,7 @@ function EmailVerificationSection({ emailVerified, onVerified }: EmailVerificati
             value={code}
             onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))}
           />
-          {message && <p className="text-[0.8rem] text-[#94a3b8]">{message}</p>}
+          {message && <p className="text-[0.8rem] text-[var(--text-secondary)]">{message}</p>}
           <div className="flex items-center gap-3">
             <button type="submit" disabled={verifying} className="btn-primary self-start px-5 text-[0.85rem]">
               {verifying ? 'Verifying...' : 'Verify'}
@@ -641,7 +641,7 @@ function PasswordChangeSection() {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-[0.85rem] bg-white/[0.03] rounded-xl">
+    <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-[0.85rem] bg-[var(--text-primary)]/[0.03] rounded-xl">
       <div className="text-[0.9rem] font-semibold">Change Password</div>
       <input
         type="password"
@@ -671,10 +671,10 @@ function PasswordChangeSection() {
         value={confirmNewPassword}
         onChange={(e) => setConfirmNewPassword(e.target.value)}
       />
-      <p className="text-[0.75rem] text-[#64748b]">
+      <p className="text-[0.75rem] text-[var(--text-muted)]">
         8-12 characters, with at least one uppercase letter, one number, and one special character.
       </p>
-      {message && <p className="text-[0.8rem] text-[#94a3b8]">{message}</p>}
+      {message && <p className="text-[0.8rem] text-[var(--text-secondary)]">{message}</p>}
       <button type="submit" disabled={saving} className="btn-secondary self-start px-5 text-[0.85rem]">
         {saving ? 'Updating...' : 'Update Password'}
       </button>
@@ -761,16 +761,16 @@ function TwoFactorSection({ mfaEnabled, onStatusChange }: TwoFactorSectionProps)
   };
 
   return (
-    <div className="flex flex-col gap-3 p-[0.85rem] bg-white/[0.03] rounded-xl">
+    <div className="flex flex-col gap-3 p-[0.85rem] bg-[var(--text-primary)]/[0.03] rounded-xl">
       <div className="flex items-center justify-between">
         <div>
           <div className="text-[0.9rem] font-semibold">Two-Factor Authentication (2FA)</div>
-          <div className="text-xs text-[#64748b]">Add an extra layer of security using TOTP apps.</div>
+          <div className="text-xs text-[var(--text-muted)]">Add an extra layer of security using TOTP apps.</div>
         </div>
         <span
           className={cn(
             'text-xs py-[0.2rem] px-2 rounded-md font-bold',
-            mfaEnabled ? 'bg-[rgba(34,197,94,0.15)] text-[#4ade80]' : 'bg-[rgba(148,163,184,0.15)] text-[#94a3b8]'
+            mfaEnabled ? 'bg-[rgba(34,197,94,0.15)] text-[#4ade80]' : 'bg-[rgba(148,163,184,0.15)] text-[var(--text-secondary)]'
           )}
         >
           {mfaEnabled ? 'Enabled' : 'Disabled'}
@@ -785,11 +785,11 @@ function TwoFactorSection({ mfaEnabled, onStatusChange }: TwoFactorSectionProps)
 
       {enrollStep === 'setup' && setupData && (
         <div className="flex flex-col gap-3">
-          <p className="text-[0.8rem] text-[#94a3b8]">Scan this QR code with your authenticator app:</p>
+          <p className="text-[0.8rem] text-[var(--text-secondary)]">Scan this QR code with your authenticator app:</p>
           <div className="bg-white p-3 rounded-xl self-start">
             <QRCodeSVG value={setupData.otpAuthUri} size={160} />
           </div>
-          <p className="text-[0.75rem] text-[#64748b]">
+          <p className="text-[0.75rem] text-[var(--text-muted)]">
             Or enter this code manually: <code className="text-[#c084fc]">{setupData.secret}</code>
           </p>
           <form onSubmit={confirmEnable} className="flex flex-col gap-2">
@@ -820,7 +820,7 @@ function TwoFactorSection({ mfaEnabled, onStatusChange }: TwoFactorSectionProps)
               <span key={code}>{code}</span>
             ))}
           </div>
-          <label className="flex items-center gap-2 text-[0.8rem] text-[#94a3b8]">
+          <label className="flex items-center gap-2 text-[0.8rem] text-[var(--text-secondary)]">
             <input
               type="checkbox"
               checked={codesAcknowledged}
@@ -948,7 +948,7 @@ function AdminTab({ isOpen }: { isOpen: boolean }) {
     <div className="flex flex-col gap-4">
       <div>
         <h3 className="text-[1.1rem] font-bold">User Administration</h3>
-        <p className="text-[0.8rem] text-[#94a3b8]">{users.length} account{users.length !== 1 ? 's' : ''}</p>
+        <p className="text-[0.8rem] text-[var(--text-secondary)]">{users.length} account{users.length !== 1 ? 's' : ''}</p>
       </div>
       <div className="flex flex-col gap-3">
         {users.map((user) => (
@@ -1011,11 +1011,11 @@ function AdminUserRow({ user, isSelf, onUpdated }: AdminUserRowProps) {
   };
 
   return (
-    <div className="flex flex-col gap-2 py-3 px-4 bg-white/[0.03] rounded-xl border border-white/[0.06]">
+    <div className="flex flex-col gap-2 py-3 px-4 bg-[var(--text-primary)]/[0.03] rounded-xl border border-[var(--text-primary)]/[0.06]">
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div>
-          <div className="text-[0.85rem] font-semibold text-[#f8fafc]">
-            {user.username} <span className="text-[#64748b] font-normal">({user.email})</span>
+          <div className="text-[0.85rem] font-semibold text-[var(--text-primary)]">
+            {user.username} <span className="text-[var(--text-muted)] font-normal">({user.email})</span>
           </div>
           <div className="flex items-center gap-2 mt-1">
             {user.roles.map((role) => (
@@ -1034,7 +1034,7 @@ function AdminUserRow({ user, isSelf, onUpdated }: AdminUserRowProps) {
           </div>
         </div>
         {isSelf ? (
-          <span className="text-[0.7rem] text-[#64748b] italic">This is your account</span>
+          <span className="text-[0.7rem] text-[var(--text-muted)] italic">This is your account</span>
         ) : (
           <div className="flex gap-2">
             <button
@@ -1086,8 +1086,8 @@ function SettingsTabBtn({ icon, label, active, onClick }: SettingsTabBtnProps) {
       className={cn(
         'flex items-center gap-[0.65rem] py-[0.65rem] px-[0.85rem] rounded-[10px] border-0 text-[0.85rem] cursor-pointer text-left shrink-0 sm:w-full sm:shrink whitespace-nowrap',
         active
-          ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] text-white font-semibold'
-          : 'bg-transparent text-[#94a3b8] font-medium'
+          ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] text-[var(--text-primary)] font-semibold'
+          : 'bg-transparent text-[var(--text-secondary)] font-medium'
       )}
     >
       {icon}

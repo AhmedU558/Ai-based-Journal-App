@@ -46,7 +46,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
       <div className={cn('flex items-center mb-4', collapsed ? 'justify-center' : 'justify-end')}>
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="bg-white/[0.08] border border-white/[0.12] text-[#94a3b8] rounded-full w-7 h-7 flex items-center justify-center cursor-pointer shrink-0"
+          className="bg-[var(--text-primary)]/[0.08] border border-[var(--text-primary)]/[0.12] text-[var(--text-secondary)] rounded-full w-7 h-7 flex items-center justify-center cursor-pointer shrink-0"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
@@ -60,7 +60,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
         </div>
         {!collapsed && (
           <div>
-            <h2 className="text-[1.4rem] font-extrabold bg-[linear-gradient(135deg,#ffffff,#94a3b8)] bg-clip-text text-transparent">
+            <h2 className="text-[1.4rem] font-extrabold bg-[linear-gradient(135deg,var(--text-primary),var(--text-secondary))] bg-clip-text text-transparent">
               Mindora
             </h2>
             <span className="text-xs text-[var(--accent-indigo,#6366f1)] font-semibold tracking-wider">
@@ -146,7 +146,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
       )}
 
       {/* Profile Footer */}
-      <div className="pt-4 border-t border-t-white/[0.08]">
+      <div className="pt-4 border-t border-t-[var(--text-primary)]/[0.08]">
         <div className={cn('flex items-center', collapsed ? 'justify-center' : 'justify-between')}>
           <div className="flex items-center gap-3">
             {avatarUrl ? (
@@ -158,7 +158,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
             )}
             {!collapsed && (
               <div>
-                <div className="text-[0.9rem] font-semibold text-[#f8fafc]">{username}</div>
+                <div className="text-[0.9rem] font-semibold text-[var(--text-primary)]">{username}</div>
               </div>
             )}
           </div>
@@ -166,7 +166,7 @@ export default function Navbar({ activeTab, setActiveTab, onLogout, onOpenAchiev
             <button
               onClick={onLogout}
               title="Logout"
-              className="bg-transparent border-0 text-[#94a3b8] hover:text-[#ef4444] cursor-pointer p-2 rounded-lg transition-all duration-200"
+              className="bg-transparent border-0 text-[var(--text-secondary)] hover:text-[#ef4444] cursor-pointer p-2 rounded-lg transition-all duration-200"
             >
               <LogOut size={18} />
             </button>
@@ -195,8 +195,8 @@ function NavItem({ icon, label, active, badge, collapsed, onClick }: NavItemProp
         'flex items-center gap-[0.85rem] rounded-xl border-0 text-[0.95rem] cursor-pointer w-full max-lg:w-auto max-lg:shrink-0 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] relative',
         collapsed ? 'py-3 justify-center' : 'py-[0.85rem] px-4 justify-start',
         active
-          ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] text-white font-semibold'
-          : 'bg-transparent text-[#94a3b8] font-medium'
+          ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] text-[var(--text-primary)] font-semibold'
+          : 'bg-transparent text-[var(--text-secondary)] font-medium'
       )}
     >
       <span className={active ? 'text-[var(--accent-indigo,#6366f1)]' : 'text-inherit'}>{icon}</span>

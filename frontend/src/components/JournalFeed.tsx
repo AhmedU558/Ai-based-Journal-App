@@ -84,17 +84,17 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
       <div className="flex items-center justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-[2rem] font-extrabold">My Journal Library</h1>
-          <p className="text-[#94a3b8] text-[0.9rem]">Browse, filter, edit, and delete your AI-analyzed entries</p>
+          <p className="text-[var(--text-secondary)] text-[0.9rem]">Browse, filter, edit, and delete your AI-analyzed entries</p>
         </div>
 
         <div className="flex items-center gap-3">
           {/* View Mode Toggle */}
-          <div className="flex bg-white/5 p-[0.2rem] rounded-[10px] border border-white/10">
+          <div className="flex bg-[var(--text-primary)]/5 p-[0.2rem] rounded-[10px] border border-[var(--text-primary)]/10">
             <button
               onClick={() => setViewMode('grid')}
               className={cn(
                 'p-[0.4rem] border-0 rounded-lg cursor-pointer',
-                viewMode === 'grid' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[#94a3b8]'
+                viewMode === 'grid' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[var(--text-secondary)]'
               )}
             >
               <LayoutGrid size={16} />
@@ -103,7 +103,7 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
               onClick={() => setViewMode('list')}
               className={cn(
                 'p-[0.4rem] border-0 rounded-lg cursor-pointer',
-                viewMode === 'list' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[#94a3b8]'
+                viewMode === 'list' ? 'bg-[rgba(99,102,241,0.25)] text-[#818cf8]' : 'bg-transparent text-[var(--text-secondary)]'
               )}
             >
               <List size={16} />
@@ -126,8 +126,8 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
             className={cn(
               'py-[0.4rem] px-[0.85rem] rounded-[20px] text-[0.8rem] cursor-pointer whitespace-nowrap',
               selectedMoodFilter === m
-                ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] border border-[#6366f1] text-white font-semibold'
-                : 'bg-white/[0.04] border border-white/[0.08] text-[#94a3b8] font-medium'
+                ? 'bg-[linear-gradient(135deg,rgba(99,102,241,0.25),rgba(168,85,247,0.15))] border border-[#6366f1] text-[var(--text-primary)] font-semibold'
+                : 'bg-[var(--text-primary)]/[0.04] border border-[var(--text-primary)]/[0.08] text-[var(--text-secondary)] font-medium'
             )}
           >
             {m === 'ALL' ? 'All Entries' : `${m} ${getMoodEmoji(m)}`}
@@ -151,7 +151,7 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
         <div className="glass-panel py-16 px-8 text-center">
           <BookOpen size={48} color="#64748b" className="mb-4" />
           <h3 className="text-[1.2rem] mb-[0.4rem]">No Journal Entries Found</h3>
-          <p className="text-[#94a3b8] mb-6">Try clearing filters or create a new journal entry.</p>
+          <p className="text-[var(--text-secondary)] mb-6">Try clearing filters or create a new journal entry.</p>
           <button onClick={onNewJournal} className="btn-primary">
             <Plus size={18} /> Write Journal
           </button>
@@ -192,8 +192,8 @@ export default function JournalFeed({ onNewJournal, onEditJournal, showToast }: 
               </div>
 
               <div onClick={() => onEditJournal(journal)} className="cursor-pointer">
-                <h3 className="text-[1.15rem] font-bold text-[#f8fafc] leading-[1.3] mb-[0.4rem]">{journal.title}</h3>
-                <p className="text-[0.9rem] text-[#94a3b8] leading-[1.5] line-clamp-3">{journal.content}</p>
+                <h3 className="text-[1.15rem] font-bold text-[var(--text-primary)] leading-[1.3] mb-[0.4rem]">{journal.title}</h3>
+                <p className="text-[0.9rem] text-[var(--text-secondary)] leading-[1.5] line-clamp-3">{journal.content}</p>
               </div>
 
               {journal.tags && journal.tags.length > 0 && (

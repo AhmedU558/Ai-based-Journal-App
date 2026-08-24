@@ -402,7 +402,7 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-[2rem] font-extrabold">{initialData ? 'Edit Journal Entry' : 'Create Journal Entry'}</h1>
-            <p className="text-[#94a3b8] text-[0.9rem]">Real-time instant mood detection, voice dictation & AI writing suite</p>
+            <p className="text-[var(--text-secondary)] text-[0.9rem]">Real-time instant mood detection, voice dictation & AI writing suite</p>
           </div>
           <button onClick={onClose} className="btn-secondary p-2 rounded-full">
             <X size={20} />
@@ -411,7 +411,7 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
 
         {/* Quick Templates Bar */}
         <div className="flex items-center gap-[0.6rem] mb-6 overflow-x-auto pb-2">
-          <span className="text-[0.8rem] text-[#64748b] font-semibold">Templates:</span>
+          <span className="text-[0.8rem] text-[var(--text-muted)] font-semibold">Templates:</span>
           <button type="button" onClick={() => handleSelectTemplate('daily')} className="btn-secondary py-[0.35rem] px-3 text-[0.8rem]">
             Daily Reflection
           </button>
@@ -433,7 +433,7 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
         <form onSubmit={handleSave} className="flex flex-col gap-6">
           {/* Title Input */}
           <div>
-            <label className="block text-[0.85rem] text-[#cbd5e1] mb-[0.4rem] font-semibold">Journal Title</label>
+            <label className="block text-[0.85rem] text-[var(--text-secondary)] mb-[0.4rem] font-semibold">Journal Title</label>
             <input
               type="text"
               required
@@ -447,10 +447,10 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
           {/* Journal Content Textarea */}
           <div>
             <div className="flex items-center justify-between mb-[0.4rem]">
-              <label className="text-[0.85rem] text-[#cbd5e1] font-semibold">Journal Content</label>
+              <label className="text-[0.85rem] text-[var(--text-secondary)] font-semibold">Journal Content</label>
 
               {/* Metrics Badge */}
-              <div className="flex items-center gap-[0.85rem] text-xs text-[#94a3b8]">
+              <div className="flex items-center gap-[0.85rem] text-xs text-[var(--text-secondary)]">
                 <span>{wordCount} Words</span>
                 <span>{charCount} Characters</span>
                 <span className="flex items-center gap-[0.2rem]">
@@ -470,7 +470,7 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
           </div>
 
           {/* AI Writing Assistant Toolbar */}
-          <div className="flex gap-[0.6rem] flex-wrap bg-white/[0.03] p-[0.85rem] rounded-2xl border border-white/[0.06]">
+          <div className="flex gap-[0.6rem] flex-wrap bg-[var(--text-primary)]/[0.03] p-[0.85rem] rounded-2xl border border-[var(--text-primary)]/[0.06]">
             <span className="text-[0.8rem] text-[#818cf8] font-bold w-full flex items-center gap-[0.35rem] mb-1">
               <Wand2 size={14} /> AI Writing Assistant Suite
             </span>
@@ -486,11 +486,11 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
           </div>
 
           {/* AI Automated Mood Selection Grid */}
-          <div className="bg-[rgba(12,16,34,0.6)] border border-white/[0.08] rounded-[18px] p-5">
+          <div className="bg-[rgba(12,16,34,0.6)] border border-[var(--text-primary)]/[0.08] rounded-[18px] p-5">
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Sparkles size={18} color="#818cf8" />
-                <span className="text-[0.9rem] text-white font-bold">
+                <span className="text-[0.9rem] text-[var(--text-primary)] font-bold">
                   AI Detected Mood: <strong className={mood === 'ANGRY' ? 'text-[#ef4444]' : 'text-[#4ade80]'}>{mood} {emoji}</strong>
                 </span>
               </div>
@@ -526,7 +526,7 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
                 'py-[0.65rem] px-[1.15rem] rounded-[14px] text-[0.85rem] font-semibold cursor-pointer inline-flex items-center gap-[0.6rem]',
                 isListening
                   ? 'bg-[rgba(239,68,68,0.25)] border border-[#ef4444] text-[#f87171]'
-                  : 'bg-white/[0.06] border border-white/[0.15] text-white'
+                  : 'bg-[var(--text-primary)]/[0.06] border border-[var(--text-primary)]/[0.15] text-[var(--text-primary)]'
               )}
             >
               <Mic size={18} color="#ec4899" />
@@ -556,13 +556,13 @@ export default function JournalEditor({ initialData, onClose, onSaveSuccess, sho
                 <Sparkles size={16} />
                 <span>AI Summary</span>
               </div>
-              <p className="text-[0.95rem] text-[#f8fafc] leading-[1.5]">{summary}</p>
+              <p className="text-[0.95rem] text-[var(--text-primary)] leading-[1.5]">{summary}</p>
             </div>
           )}
 
           {/* Tags Input */}
           <div>
-            <label className="block text-[0.85rem] text-[#cbd5e1] mb-[0.4rem] font-semibold">Tags (Press Enter)</label>
+            <label className="block text-[0.85rem] text-[var(--text-secondary)] mb-[0.4rem] font-semibold">Tags (Press Enter)</label>
             <div className="flex gap-2 flex-wrap mb-3">
               {tags.map((tag, idx) => (
                 <span

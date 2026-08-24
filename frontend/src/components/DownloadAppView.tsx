@@ -32,7 +32,7 @@ export default function DownloadAppView({ isAuthenticated, onBack, showToast }: 
       <div className="glass-panel glass-panel-glow animate-fade-in w-full max-w-[520px] p-10 relative">
         <button
           onClick={onBack}
-          className="absolute top-6 left-6 flex items-center gap-1 text-[0.8rem] text-[#94a3b8] hover:text-[#f8fafc] transition-colors"
+          className="absolute top-6 left-6 flex items-center gap-1 text-[0.8rem] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
         >
           <ArrowLeft size={14} />
           {isAuthenticated ? 'Back to Dashboard' : 'Back to Sign In'}
@@ -42,10 +42,10 @@ export default function DownloadAppView({ isAuthenticated, onBack, showToast }: 
           <div className="inline-flex p-3 rounded-2xl bg-[linear-gradient(135deg,#6366f1,#a855f7)] shadow-[0_8px_24px_rgba(99,102,241,0.4)] mb-4">
             <MindoraMark size={40} />
           </div>
-          <h1 className="text-[1.6rem] font-extrabold bg-[linear-gradient(135deg,#ffffff,#94a3b8)] bg-clip-text text-transparent">
+          <h1 className="text-[1.6rem] font-extrabold bg-[linear-gradient(135deg,var(--text-primary),var(--text-secondary))] bg-clip-text text-transparent">
             Get the Mindora App
           </h1>
-          <p className="text-[#94a3b8] text-[0.9rem] mt-2">
+          <p className="text-[var(--text-secondary)] text-[0.9rem] mt-2">
             Your thoughts. Your story. Your AI companion - now in your pocket.
           </p>
         </div>
@@ -66,24 +66,24 @@ export default function DownloadAppView({ isAuthenticated, onBack, showToast }: 
             <button
               type="button"
               onClick={() => notifyComingSoon('Google Play')}
-              className="flex-1 flex items-center gap-2 justify-center py-3 px-4 rounded-[14px] bg-black/40 border border-white/[0.12] text-white cursor-pointer opacity-70 hover:opacity-90 transition-opacity"
+              className="flex-1 flex items-center gap-2 justify-center py-3 px-4 rounded-[14px] bg-black/40 border border-[var(--text-primary)]/[0.12] text-[var(--text-primary)] cursor-pointer opacity-70 hover:opacity-90 transition-opacity"
               title="Coming soon"
             >
               <GooglePlayLogo size={22} />
               <span className="flex flex-col items-start leading-tight">
-                <span className="text-[0.6rem] text-[#cbd5e1]">Coming soon on</span>
+                <span className="text-[0.6rem] text-[var(--text-secondary)]">Coming soon on</span>
                 <span className="text-[0.85rem] font-semibold">Google Play</span>
               </span>
             </button>
             <button
               type="button"
               onClick={() => notifyComingSoon('The App Store')}
-              className="flex-1 flex items-center gap-2 justify-center py-3 px-4 rounded-[14px] bg-black/40 border border-white/[0.12] text-white cursor-pointer opacity-70 hover:opacity-90 transition-opacity"
+              className="flex-1 flex items-center gap-2 justify-center py-3 px-4 rounded-[14px] bg-black/40 border border-[var(--text-primary)]/[0.12] text-[var(--text-primary)] cursor-pointer opacity-70 hover:opacity-90 transition-opacity"
               title="Coming soon"
             >
               <AppStoreLogo size={22} />
               <span className="flex flex-col items-start leading-tight">
-                <span className="text-[0.6rem] text-[#cbd5e1]">Coming soon on the</span>
+                <span className="text-[0.6rem] text-[var(--text-secondary)]">Coming soon on the</span>
                 <span className="text-[0.85rem] font-semibold">App Store</span>
               </span>
             </button>
@@ -91,14 +91,14 @@ export default function DownloadAppView({ isAuthenticated, onBack, showToast }: 
         </div>
 
         {/* Install Instructions */}
-        <div className="bg-white/[0.03] border border-white/[0.08] rounded-2xl p-5">
+        <div className="bg-[var(--text-primary)]/[0.03] border border-[var(--text-primary)]/[0.08] rounded-2xl p-5">
           <div className="flex items-center gap-2 mb-3">
             <FolderOpen size={16} color="#38bdf8" />
-            <h2 className="text-[0.9rem] font-semibold text-[#f8fafc]">How to install the APK</h2>
+            <h2 className="text-[0.9rem] font-semibold text-[var(--text-primary)]">How to install the APK</h2>
           </div>
           <ol className="flex flex-col gap-2">
             {INSTALL_STEPS.map((step, idx) => (
-              <li key={idx} className="flex items-start gap-3 text-[0.82rem] text-[#94a3b8] leading-relaxed">
+              <li key={idx} className="flex items-start gap-3 text-[0.82rem] text-[var(--text-secondary)] leading-relaxed">
                 <span className="shrink-0 w-5 h-5 rounded-full bg-[rgba(99,102,241,0.2)] text-[#818cf8] text-[0.7rem] font-bold flex items-center justify-center mt-0.5">
                   {idx + 1}
                 </span>
@@ -106,7 +106,7 @@ export default function DownloadAppView({ isAuthenticated, onBack, showToast }: 
               </li>
             ))}
           </ol>
-          <div className="flex items-start gap-2 mt-4 pt-4 border-t border-white/[0.08] text-[0.75rem] text-[#64748b]">
+          <div className="flex items-start gap-2 mt-4 pt-4 border-t border-[var(--text-primary)]/[0.08] text-[0.75rem] text-[var(--text-muted)]">
             <ShieldCheck size={14} className="shrink-0 mt-0.5" />
             <span>
               This APK is built and distributed directly by Mindora - Android shows a warning for any app installed

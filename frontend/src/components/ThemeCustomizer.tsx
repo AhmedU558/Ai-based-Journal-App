@@ -47,14 +47,14 @@ export default function ThemeCustomizer() {
 
       {isOpen && (
         <div className="glass-panel animate-fade-in absolute top-[2.8rem] right-0 z-[999] p-4 w-[200px] flex flex-col gap-2">
-          <div className="text-xs text-[#94a3b8] font-semibold mb-[0.2rem]">ACCENT PALETTE</div>
+          <div className="text-xs text-[var(--text-secondary)] font-semibold mb-[0.2rem]">ACCENT PALETTE</div>
           {ACCENT_THEMES.map((t) => (
             <button
               key={t.id}
               onClick={() => selectTheme(t.id)}
               className={cn(
-                'flex items-center justify-between py-[0.45rem] px-3 rounded-lg border-0 text-[#f8fafc] text-[0.85rem] cursor-pointer',
-                theme === t.id ? 'bg-white/10' : 'bg-transparent'
+                'flex items-center justify-between py-[0.45rem] px-3 rounded-lg border-0 text-[var(--text-primary)] text-[0.85rem] cursor-pointer',
+                theme === t.id ? 'bg-[var(--text-primary)]/10' : 'bg-transparent'
               )}
             >
               <div className="flex items-center gap-2">

@@ -46,10 +46,10 @@ export default function Toast({ toast, onClose }: ToastProps) {
       )}
     >
       {ICONS[variant]}
-      <span className="text-[0.9rem] text-[#f8fafc] font-medium flex-1">{toast.message}</span>
+      <span className="text-[0.9rem] text-[var(--text-primary)] font-medium flex-1">{toast.message}</span>
       <button
         onClick={onClose}
-        className="bg-transparent border-0 text-[#94a3b8] cursor-pointer flex items-center"
+        className="bg-transparent border-0 text-[var(--text-secondary)] cursor-pointer flex items-center"
       >
         <X size={16} />
       </button>

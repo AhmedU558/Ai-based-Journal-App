@@ -135,7 +135,7 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: AvatarCro
         >
           <div className="flex items-center justify-between">
             <h3 className="text-[1.05rem] font-bold">Move and Scale</h3>
-            <button onClick={onCancel} className="bg-transparent border-0 text-[#64748b] cursor-pointer">
+            <button onClick={onCancel} className="bg-transparent border-0 text-[var(--text-muted)] cursor-pointer">
               <X size={20} />
             </button>
           </div>
@@ -167,7 +167,7 @@ export default function AvatarCropModal({ file, onCancel, onCropped }: AvatarCro
           </div>
 
           <div className="flex items-center gap-3">
-            <ZoomIn size={16} className="text-[#64748b] shrink-0" />
+            <ZoomIn size={16} className="text-[var(--text-muted)] shrink-0" />
             <input
               type="range"
               min={1}
