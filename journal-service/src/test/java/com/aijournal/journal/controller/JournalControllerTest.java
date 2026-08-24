@@ -2,6 +2,7 @@ package com.aijournal.journal.controller;
 
 import com.aijournal.common.dto.ApiResponse;
 import com.aijournal.common.dto.PagedResponse;
+import com.aijournal.journal.dto.JournalRequest;
 import com.aijournal.journal.entity.Journal;
 import com.aijournal.journal.service.JournalService;
 import org.junit.jupiter.api.Test;
@@ -34,26 +35,38 @@ class JournalControllerTest {
     }
 
     @Test
-    void createJournal_MissingUserIdHeader_ResolvesToUserOne() {
-        controller = controller();
-        Journal journal = new Journal();
-        when(journalService.createJournal(eq(1L), any(Journal.class))).thenReturn(journal);
-
-        ResponseEntity<ApiResponse<Journal>> response = controller.createJournal(null, journal);
-
-        assertThat(response.getStatusCode().value()).isEqualTo(201);
-        verify(journalService).createJournal(1L, journal);
-    }
-
-    @Test
     void createJournal_WithUserIdHeader_UsesHeaderValue() {
         controller = controller();
         Journal journal = new Journal();
         when(journalService.createJournal(eq(7L), any(Journal.class))).thenReturn(journal);
+        JournalRequest request = new JournalRequest();
+        request.setTitle("My Entry");
+        request.setContent("Some content");
 
-        controller.createJournal(7L, journal);
+        controller.createJournal(7L, request);
 
-        verify(journalService).createJournal(7L, journal);
+        ArgumentCaptor<Journal> captor = ArgumentCaptor.forClass(Journal.class);
+        verify(journalService).createJournal(eq(7L), captor.capture());
+        assertThat(captor.getValue().getTitle()).isEqualTo("My Entry");
+        assertThat(captor.getValue().getContent()).isEqualTo("Some content");
+    }
+
+    @Test
+    void createJournal_RequestBodyHasNoIdOrUserIdOrEncryptionFields() {
+        // Regression guard for the over-posting fix: JournalRequest has no
+        // setter at all for id/userId/version/contentEncrypted/wordCount/
+        // createdAt/isPinned/isFavorite/isArchived/isDeleted, so a client
+        // sending those in the JSON body has nothing for Jackson to bind
+        // them onto - structurally, not just by service-layer convention.
+        assertThat(JournalRequest.class.getDeclaredMethods())
+                .noneMatch(m -> m.getName().equals("setId"))
+                .noneMatch(m -> m.getName().equals("setUserId"))
+                .noneMatch(m -> m.getName().equals("setVersion"))
+                .noneMatch(m -> m.getName().equals("setContentEncrypted"))
+                .noneMatch(m -> m.getName().equals("setIsPinned"))
+                .noneMatch(m -> m.getName().equals("setIsFavorite"))
+                .noneMatch(m -> m.getName().equals("setIsArchived"))
+                .noneMatch(m -> m.getName().equals("setIsDeleted"));
     }
 
     @Test
@@ -85,11 +98,11 @@ class JournalControllerTest {
     }
 
     @Test
-    void permanentDeleteJournal_MissingUserIdHeader_ResolvesToUserOne() {
+    void permanentDeleteJournal_UserId_PassesThroughUnchanged() {
         controller = controller();
 
-        controller.permanentDeleteJournal(null, 5L);
+        controller.permanentDeleteJournal(3L, 5L);
 
-        verify(journalService).permanentDeleteJournal(1L, 5L);
+        verify(journalService).permanentDeleteJournal(3L, 5L);
     }
 }

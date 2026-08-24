@@ -54,7 +54,12 @@ class AnalyticsServiceTest {
     }
 
     private static Map<String, Object> journalsResponse(List<Map<String, Object>> journals) {
-        return Map.of("data", Map.of("content", journals));
+        // "last": true matches every real journal-service response shape -
+        // fetchAllJournals() now pages until it sees this, so a mocked
+        // response missing it would make the service loop through
+        // MAX_PAGES worth of identical mocked pages instead of stopping
+        // after one, duplicating every journal in these fixtures.
+        return Map.of("data", Map.of("content", journals, "last", true));
     }
 
     @SuppressWarnings("unchecked")
@@ -171,6 +176,26 @@ class AnalyticsServiceTest {
         Map<String, Object> insights = service.getUserJournalInsights(1L, "Bearer token");
 
         assertThat(insights).doesNotContainKeys("mostMentionedPeople", "mostMentionedPlaces");
+    }
+
+    @Test
+    void getUserJournalInsights_MoreThanOnePageOfJournals_FetchesAllPagesNotJustTheFirst() {
+        // Regression guard: a single fixed-size fetch used to silently
+        // truncate every insight at the first page's worth of journals.
+        Map<String, Object> page0 = Map.of("data", Map.of(
+                "content", List.of(journal(100, "HAPPY", List.of(), isoNow())),
+                "last", false));
+        Map<String, Object> page1 = Map.of("data", Map.of(
+                "content", List.of(journal(50, "SAD", List.of(), isoNow())),
+                "last", true));
+        when(restTemplate.exchange(org.mockito.ArgumentMatchers.contains("page=0"), eq(HttpMethod.GET), any(HttpEntity.class), any(ParameterizedTypeReference.class)))
+                .thenReturn(ResponseEntity.ok(page0));
+        when(restTemplate.exchange(org.mockito.ArgumentMatchers.contains("page=1"), eq(HttpMethod.GET), any(HttpEntity.class), any(ParameterizedTypeReference.class)))
+                .thenReturn(ResponseEntity.ok(page1));
+
+        Map<String, Object> insights = service.getUserJournalInsights(1L, "Bearer token");
+
+        assertThat(insights.get("totalWordsWritten")).isEqualTo(150);
     }
 
     @Test

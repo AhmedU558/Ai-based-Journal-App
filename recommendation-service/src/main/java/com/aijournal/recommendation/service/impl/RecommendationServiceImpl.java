@@ -1,4 +1,5 @@
 package com.aijournal.recommendation.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.recommendation.service.RecommendationService;
 import org.slf4j.Logger;
@@ -23,7 +24,7 @@ public class RecommendationServiceImpl implements RecommendationService {
     @Value("${journal.service.url:http://journal-service:8083}")
     private String journalServiceUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     private enum MoodBucket { POSITIVE, CALM, DISTRESSED, DOWN, NEUTRAL }
 

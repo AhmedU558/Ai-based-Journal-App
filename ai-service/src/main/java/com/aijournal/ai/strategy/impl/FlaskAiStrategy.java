@@ -1,6 +1,7 @@
 package com.aijournal.ai.strategy.impl;
 
 import com.aijournal.ai.strategy.AiProviderStrategy;
+import com.aijournal.common.http.RestTemplateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,11 +21,17 @@ public class FlaskAiStrategy implements AiProviderStrategy {
     private static final ParameterizedTypeReference<Map<String, Object>> MAP_RESPONSE_TYPE = new ParameterizedTypeReference<>() {
     };
     private static final String CONTENT_KEY = "content";
+    // Longer read timeout than the platform default (10s) - these calls can
+    // go through python-ai-service's own Gemini/Claude fallback chain
+    // (primary provider, then a fallback provider, then a keyword-based
+    // reply), which can genuinely take longer than a typical internal
+    // service-to-service call.
+    private static final int FLASK_READ_TIMEOUT_MS = 30_000;
 
     @Value("${ai.flask.url:http://python-ai-service:5000}")
     private String flaskBaseUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create(5_000, FLASK_READ_TIMEOUT_MS);
 
     @Override
     public String getProviderName() {

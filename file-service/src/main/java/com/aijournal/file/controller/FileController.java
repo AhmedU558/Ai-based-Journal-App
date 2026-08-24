@@ -3,9 +3,11 @@ package com.aijournal.file.controller;
 import com.aijournal.common.dto.ApiResponse;
 import com.aijournal.common.exception.ForbiddenException;
 import com.aijournal.file.storage.FileStorageStrategy;
+import com.aijournal.file.validation.FileTypeValidator;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -20,9 +22,11 @@ import java.util.Map;
 public class FileController {
 
     private final FileStorageStrategy fileStorageStrategy;
+    private final FileTypeValidator fileTypeValidator;
 
-    public FileController(FileStorageStrategy fileStorageStrategy) {
+    public FileController(FileStorageStrategy fileStorageStrategy, FileTypeValidator fileTypeValidator) {
         this.fileStorageStrategy = fileStorageStrategy;
+        this.fileTypeValidator = fileTypeValidator;
     }
 
     @PostMapping("/upload")
@@ -30,6 +34,7 @@ public class FileController {
     public ResponseEntity<ApiResponse<Map<String, String>>> uploadFile(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam("file") MultipartFile file) {
+        fileTypeValidator.validate(file);
         String storedPath = fileStorageStrategy.storeFile(file, "user-" + userId);
         Map<String, String> result = Map.of(
                 "filePath", storedPath,
@@ -42,17 +47,17 @@ public class FileController {
 
     @GetMapping("/download")
     @Operation(summary = "Download attachment file")
-    public ResponseEntity<byte[]> downloadFile(
+    public ResponseEntity<Resource> downloadFile(
             @RequestHeader("X-User-Id") Long userId,
             @RequestParam("path") String path) {
         if (path.contains("..") || !path.startsWith("user-" + userId + "/")) {
             throw new ForbiddenException("You do not have access to this file");
         }
-        byte[] data = fileStorageStrategy.getFile(path);
+        Resource resource = fileStorageStrategy.getFile(path);
         return ResponseEntity.ok()
                 .header(HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"" + path.substring(path.lastIndexOf("/") + 1) + "\"")
                 .contentType(MediaType.APPLICATION_OCTET_STREAM)
-                .body(data);
+                .body(resource);
     }
 
     @DeleteMapping

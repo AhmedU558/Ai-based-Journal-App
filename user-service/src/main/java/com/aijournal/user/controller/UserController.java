@@ -1,6 +1,8 @@
 package com.aijournal.user.controller;
 
 import com.aijournal.common.dto.ApiResponse;
+import com.aijournal.user.dto.UserPreferencesRequest;
+import com.aijournal.user.dto.UserProfileRequest;
 import com.aijournal.user.entity.UserPreferences;
 import com.aijournal.user.entity.UserProfile;
 import com.aijournal.user.service.UserService;
@@ -32,7 +34,13 @@ public class UserController {
     @Operation(summary = "Update user profile")
     public ResponseEntity<ApiResponse<UserProfile>> updateProfile(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestBody UserProfile profile) {
+            @RequestBody UserProfileRequest request) {
+        UserProfile profile = new UserProfile();
+        profile.setBio(request.getBio());
+        profile.setAvatarUrl(request.getAvatarUrl());
+        profile.setPhoneNumber(request.getPhoneNumber());
+        profile.setCountry(request.getCountry());
+        profile.setCity(request.getCity());
         UserProfile updated = userService.updateProfile(userId, profile);
         return ResponseEntity.ok(ApiResponse.success("Profile updated successfully", updated));
     }
@@ -48,7 +56,14 @@ public class UserController {
     @Operation(summary = "Update user settings (Dark Mode, Language, Timezone)")
     public ResponseEntity<ApiResponse<UserPreferences>> updatePreferences(
             @RequestHeader("X-User-Id") Long userId,
-            @RequestBody UserPreferences preferences) {
+            @RequestBody UserPreferencesRequest request) {
+        UserPreferences preferences = new UserPreferences();
+        preferences.setDarkMode(request.getDarkMode());
+        preferences.setTimeZone(request.getTimeZone());
+        preferences.setLanguage(request.getLanguage());
+        preferences.setEmailNotifications(request.getEmailNotifications());
+        preferences.setPushNotifications(request.getPushNotifications());
+        preferences.setDailyReminderTime(request.getDailyReminderTime());
         UserPreferences updated = userService.updatePreferences(userId, preferences);
         return ResponseEntity.ok(ApiResponse.success("Preferences updated successfully", updated));
     }

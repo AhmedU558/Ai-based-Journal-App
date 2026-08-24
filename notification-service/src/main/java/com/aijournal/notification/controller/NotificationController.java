@@ -5,6 +5,7 @@ import com.aijournal.common.dto.PagedResponse;
 import com.aijournal.notification.dto.CreateNotificationRequest;
 import com.aijournal.notification.dto.NotificationResponse;
 import com.aijournal.notification.dto.RegisterDeviceTokenRequest;
+import com.aijournal.notification.dto.SendEmailRequest;
 import com.aijournal.notification.service.NotificationService;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -15,8 +16,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/notifications")
@@ -37,8 +36,8 @@ public class NotificationController {
     @PostMapping("/send-email")
     @PreAuthorize("hasRole('SYSTEM')")
     @Operation(summary = "Send an email notification (internal, ROLE_SYSTEM only)")
-    public ResponseEntity<ApiResponse<Void>> sendEmail(@RequestBody Map<String, String> request) {
-        notificationService.sendEmail(request.get("to"), request.get("subject"), request.get("body"));
+    public ResponseEntity<ApiResponse<Void>> sendEmail(@Valid @RequestBody SendEmailRequest request) {
+        notificationService.sendEmail(request.getTo(), request.getSubject(), request.getBody());
         return ResponseEntity.ok(ApiResponse.success("Email sent successfully", null));
     }
 

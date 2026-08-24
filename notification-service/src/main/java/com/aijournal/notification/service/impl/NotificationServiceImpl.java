@@ -15,6 +15,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -42,7 +43,15 @@ public class NotificationServiceImpl implements NotificationService {
         this.mailSender = mailSender;
     }
 
+    // Runs off the calling (servlet request) thread - mailSender.send() is a
+    // real synchronous SMTP round trip, and previously blocked whichever
+    // thread called this for however long that took. This is called through
+    // Spring's proxy from a different bean (NotificationController), so
+    // @Async's AOP interception applies correctly here - unlike the private
+    // same-class calls this exact self-invocation pitfall bit elsewhere in
+    // this codebase (see AuthServiceImpl's own notificationExecutor comment).
     @Override
+    @Async("mailExecutor")
     public void sendEmail(String to, String subject, String body) {
         try {
             SimpleMailMessage message = new SimpleMailMessage();

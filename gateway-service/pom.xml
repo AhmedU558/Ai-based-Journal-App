@@ -73,6 +73,40 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
+            <!-- The parent POM's shared compiler config only lists
+                 mapstruct-processor in annotationProcessorPaths - once that
+                 list is non-empty, Maven stops auto-discovering any other
+                 processor on the classpath, so lombok's own processor never
+                 actually ran for this module (the only one in the monorepo
+                 that depends on lombok) despite lombok being a real
+                 dependency here. Scoped to this module only, not the shared
+                 parent config - adding it there broke `common-library`
+                 (which has no lombok dependency at all) with an unrelated
+                 javac-internals ExceptionInInitializerError when Maven tried
+                 to load Lombok's processor for a module that never needed it. -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <annotationProcessorPaths>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok</artifactId>
+                            <version>${lombok.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.projectlombok</groupId>
+                            <artifactId>lombok-mapstruct-binding</artifactId>
+                            <version>${lombok-mapstruct-binding.version}</version>
+                        </path>
+                        <path>
+                            <groupId>org.mapstruct</groupId>
+                            <artifactId>mapstruct-processor</artifactId>
+                            <version>${org.mapstruct.version}</version>
+                        </path>
+                    </annotationProcessorPaths>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>

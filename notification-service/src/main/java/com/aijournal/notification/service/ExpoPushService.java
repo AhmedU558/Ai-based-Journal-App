@@ -1,4 +1,5 @@
 package com.aijournal.notification.service;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,7 @@ public class ExpoPushService {
     @Value("${expo.push.url:https://exp.host/--/api/v2/push/send}")
     private String pushUrl;
 
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     public void sendPush(List<String> expoPushTokens, String title, String body) {
         if (expoPushTokens == null || expoPushTokens.isEmpty()) {

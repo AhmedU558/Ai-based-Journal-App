@@ -3,10 +3,13 @@ package com.aijournal.file.storage.impl;
 import com.aijournal.common.exception.BadRequestException;
 import com.aijournal.file.storage.FileStorageStrategy;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.Resource;
+import org.springframework.core.io.UrlResource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -45,11 +48,15 @@ public class LocalFileStorageStrategy implements FileStorageStrategy {
     }
 
     @Override
-    public byte[] getFile(String relativePath) {
+    public Resource getFile(String relativePath) {
         try {
             Path filePath = Paths.get(uploadDir, relativePath);
-            return Files.readAllBytes(filePath);
-        } catch (IOException e) {
+            Resource resource = new UrlResource(filePath.toUri());
+            if (!resource.exists() || !resource.isReadable()) {
+                throw new BadRequestException("File not found or unreadable: " + relativePath);
+            }
+            return resource;
+        } catch (MalformedURLException e) {
             throw new BadRequestException("File not found or unreadable: " + relativePath);
         }
     }

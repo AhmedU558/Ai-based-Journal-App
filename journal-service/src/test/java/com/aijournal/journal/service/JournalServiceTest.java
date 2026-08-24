@@ -149,12 +149,17 @@ class JournalServiceTest {
     }
 
     @Test
-    void createJournal_NullUserId_FallsBackToUserOne() {
+    void createJournal_UserId_PassesThroughUnchanged() {
+        // X-User-Id is now a required header - the old defaults-to-1L-when-null
+        // fallback was removed (common-library's JwtAuthenticationFilter always
+        // force-sets this header from the verified JWT, so a genuinely missing
+        // header now gets rejected by Spring with a 400 before this method ever
+        // runs, rather than silently attributing the journal to user 1).
         Journal input = new Journal();
 
-        Journal created = journalService.createJournal(null, input);
+        Journal created = journalService.createJournal(5L, input);
 
-        assertThat(created.getUserId()).isEqualTo(1L);
+        assertThat(created.getUserId()).isEqualTo(5L);
     }
 
     @Test

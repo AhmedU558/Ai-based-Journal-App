@@ -1,5 +1,8 @@
 package com.aijournal.ai.controller;
 
+import com.aijournal.ai.dto.ChatRequest;
+import com.aijournal.ai.dto.ContentRequest;
+import com.aijournal.ai.dto.RecommendationsRequest;
 import com.aijournal.ai.entity.MoodHistory;
 import com.aijournal.ai.service.AiService;
 import com.aijournal.ai.strategy.AiProviderStrategy.*;
@@ -7,6 +10,7 @@ import com.aijournal.common.dto.ApiResponse;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -26,77 +30,72 @@ public class AiController {
 
     @PostMapping("/summarize")
     @Operation(summary = "Generate Short, Detailed, and Bullet Journal Summaries")
-    public ResponseEntity<ApiResponse<SummaryResult>> summarize(@RequestBody Map<String, String> request) {
-        SummaryResult result = aiService.summarizeJournal(request.get("content"));
+    public ResponseEntity<ApiResponse<SummaryResult>> summarize(@Valid @RequestBody ContentRequest request) {
+        SummaryResult result = aiService.summarizeJournal(request.getContent());
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @PostMapping("/mood")
     @Operation(summary = "Detect Mood (Happy, Sad, Anxious, Angry, Stress, etc.) with Confidence Score and Emoji")
     public ResponseEntity<ApiResponse<MoodResult>> detectMood(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
             @RequestParam(required = false) Long journalId,
-            @RequestBody Map<String, String> request) {
-        Long uid = userId != null ? userId : 1L;
-        MoodResult result = aiService.detectAndSaveMood(uid, journalId != null ? journalId : 0L, request.get("content"), authorizationHeader);
+            @Valid @RequestBody ContentRequest request) {
+        MoodResult result = aiService.detectAndSaveMood(userId, journalId != null ? journalId : 0L, request.getContent(), authorizationHeader);
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @GetMapping("/emotion-timeline")
     @Operation(summary = "Get Weekly, Monthly, or Yearly Emotional Analytics Timeline")
     public ResponseEntity<ApiResponse<List<MoodHistory>>> getEmotionTimeline(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestParam(defaultValue = "weekly") String period) {
-        Long uid = userId != null ? userId : 1L;
-        List<MoodHistory> timeline = aiService.getEmotionTimeline(uid, period);
+        List<MoodHistory> timeline = aiService.getEmotionTimeline(userId, period);
         return ResponseEntity.ok(ApiResponse.success(timeline));
     }
 
     @PostMapping("/recommendations")
     @Operation(summary = "Generate Context-Aware AI Recommendations (Walk, Meditate, Sleep early, etc.)")
-    public ResponseEntity<ApiResponse<List<String>>> getRecommendations(@RequestBody Map<String, String> request) {
-        List<String> recommendations = aiService.getRecommendations(request.get("content"), request.getOrDefault("mood", "NEUTRAL"));
+    public ResponseEntity<ApiResponse<List<String>>> getRecommendations(@Valid @RequestBody RecommendationsRequest request) {
+        String mood = request.getMood() != null ? request.getMood() : "NEUTRAL";
+        List<String> recommendations = aiService.getRecommendations(request.getContent(), mood);
         return ResponseEntity.ok(ApiResponse.success(recommendations));
     }
 
     @PostMapping("/tags")
     @Operation(summary = "Auto-Generate Journal Tags (#career, #health, #family, etc.)")
-    public ResponseEntity<ApiResponse<List<String>>> generateTags(@RequestBody Map<String, String> request) {
-        List<String> tags = aiService.generateTags(request.get("content"));
+    public ResponseEntity<ApiResponse<List<String>>> generateTags(@Valid @RequestBody ContentRequest request) {
+        List<String> tags = aiService.generateTags(request.getContent());
         return ResponseEntity.ok(ApiResponse.success(tags));
     }
 
     @PostMapping("/chat")
     @Operation(summary = "Chat with your Journal History (RAG / AI Memory)")
-    @SuppressWarnings("unchecked")
     public ResponseEntity<ApiResponse<String>> chatWithJournal(
-            @RequestHeader(value = "X-User-Id", required = false) Long userId,
+            @RequestHeader("X-User-Id") Long userId,
             @RequestHeader(value = "Authorization", required = false) String authorizationHeader,
-            @RequestBody Map<String, Object> request) {
-        Long uid = userId != null ? userId : 1L;
-        String query = (String) request.get("query");
-        String context = request.get("context") != null ? (String) request.get("context") : "";
+            @Valid @RequestBody ChatRequest request) {
+        String context = request.getContext() != null ? request.getContext() : "";
         // Prior conversation turns, oldest first - without this, a real LLM
         // provider has no memory of the conversation and evaluates every
         // message in isolation (see AiProviderStrategy.chatWithJournal).
-        Object rawHistory = request.get("history");
-        List<Map<String, String>> history = rawHistory instanceof List ? (List<Map<String, String>>) rawHistory : List.of();
-        String answer = aiService.chatWithJournal(uid, query, context, history, authorizationHeader);
+        List<Map<String, String>> history = request.getHistory() != null ? request.getHistory() : List.of();
+        String answer = aiService.chatWithJournal(userId, request.getQuery(), context, history, authorizationHeader);
         return ResponseEntity.ok(ApiResponse.success("AI Response generated", answer));
     }
 
     @PostMapping("/rephrase")
     @Operation(summary = "Rephrase Journal Text via AI")
-    public ResponseEntity<ApiResponse<RephraseResult>> rephrase(@RequestBody Map<String, String> request) {
-        RephraseResult result = aiService.rephrase(request.get("content"));
+    public ResponseEntity<ApiResponse<RephraseResult>> rephrase(@Valid @RequestBody ContentRequest request) {
+        RephraseResult result = aiService.rephrase(request.getContent());
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 
     @PostMapping("/grammar")
     @Operation(summary = "Fix Grammar & Spelling via AI")
-    public ResponseEntity<ApiResponse<GrammarResult>> fixGrammar(@RequestBody Map<String, String> request) {
-        GrammarResult result = aiService.fixGrammar(request.get("content"));
+    public ResponseEntity<ApiResponse<GrammarResult>> fixGrammar(@Valid @RequestBody ContentRequest request) {
+        GrammarResult result = aiService.fixGrammar(request.getContent());
         return ResponseEntity.ok(ApiResponse.success(result));
     }
 }

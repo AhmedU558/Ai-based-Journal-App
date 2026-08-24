@@ -4,9 +4,6 @@ server:
 spring:
   application:
     name: ai-service
-  autoconfigure:
-    exclude:
-      - org.springframework.ai.autoconfigure.openai.OpenAiAutoConfiguration
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:mysql://localhost:3306/ai_db?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
     username: ${SPRING_DATASOURCE_USERNAME:root}

@@ -1,4 +1,5 @@
 package com.aijournal.ai.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.ai.entity.MoodHistory;
 import com.aijournal.ai.repository.MoodHistoryRepository;
@@ -46,7 +47,7 @@ public class AiServiceImpl implements AiService {
 
     private final AiStrategyFactory aiStrategyFactory;
     private final MoodHistoryRepository moodHistoryRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     @Value("${journal.service.url:http://journal-service:8083}")
     private String journalServiceUrl;

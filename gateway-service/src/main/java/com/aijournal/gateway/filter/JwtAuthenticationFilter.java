@@ -60,7 +60,7 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
             String path = request.getURI().getPath();
 
             if (isExcluded(path)) {
-                return chain.filter(exchange);
+                return chain.filter(stripTrustedHeaders(exchange));
             }
 
             return authenticateAndFilter(exchange, chain);
@@ -69,6 +69,23 @@ public class JwtAuthenticationFilter extends AbstractGatewayFilterFactory<JwtAut
 
     private boolean isExcluded(String path) {
         return EXACT_EXCLUDED_PATHS.contains(path) || PREFIX_EXCLUDED_PATHS.stream().anyMatch(path::startsWith);
+    }
+
+    // Public/excluded paths skip JWT validation entirely, so nothing here ever
+    // derives a real userId/email to set - but without this, a request could
+    // carry its own forged X-User-Id/X-User-Email straight through to
+    // whatever service handles the path. Not exploitable today (no public
+    // path trusts a header-based identity), but this closes the gap so that
+    // stays true by construction rather than by every future public endpoint
+    // remembering not to trust these headers.
+    private ServerWebExchange stripTrustedHeaders(ServerWebExchange exchange) {
+        ServerHttpRequest strippedRequest = exchange.getRequest().mutate()
+                .headers(headers -> {
+                    headers.remove(HEADER_USER_ID);
+                    headers.remove("X-User-Email");
+                })
+                .build();
+        return exchange.mutate().request(strippedRequest).build();
     }
 
     private Mono<Void> authenticateAndFilter(ServerWebExchange exchange, GatewayFilterChain chain) {

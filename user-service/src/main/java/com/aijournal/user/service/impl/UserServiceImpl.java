@@ -1,4 +1,5 @@
 package com.aijournal.user.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.user.entity.UserPreferences;
 import com.aijournal.user.entity.UserProfile;
@@ -22,7 +23,7 @@ public class UserServiceImpl implements UserService {
 
     private final UserProfileRepository userProfileRepository;
     private final UserPreferencesRepository userPreferencesRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
 
     @Value("${auth.service.url:http://auth-service:8081}")
     private String authServiceUrl;
@@ -36,8 +37,14 @@ public class UserServiceImpl implements UserService {
         this.userPreferencesRepository = userPreferencesRepository;
     }
 
+    // Not readOnly - despite the name, this is a get-or-create (the
+    // orElseGet branch calls save()). A readOnly transaction can be routed
+    // to a read replica or a connection pool that strictly enforces
+    // read-only mode, where that save() would throw
+    // "Connection is read-only. Queries leading to data modification are
+    // not allowed" instead of lazily creating the row.
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public UserProfile getProfile(Long userId) {
         return userProfileRepository.findById(userId)
                 .orElseGet(() -> userProfileRepository.save(new UserProfile(userId, "", "", "", "", "")));
@@ -55,8 +62,10 @@ public class UserServiceImpl implements UserService {
         return userProfileRepository.save(existing);
     }
 
+    // Same reasoning as getProfile() above - a get-or-create must not be
+    // marked readOnly.
     @Override
-    @Transactional(readOnly = true)
+    @Transactional
     public UserPreferences getPreferences(Long userId) {
         return userPreferencesRepository.findById(userId)
                 .orElseGet(() -> userPreferencesRepository.save(new UserPreferences(userId, true, "UTC", "en", true, true, "20:00")));

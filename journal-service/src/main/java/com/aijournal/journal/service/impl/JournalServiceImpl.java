@@ -53,7 +53,7 @@ public class JournalServiceImpl implements JournalService {
         // Force both to null so every create is unambiguously a real insert.
         journal.setId(null);
         journal.setVersion(null);
-        journal.setUserId(userId != null ? userId : 1L);
+        journal.setUserId(userId);
         if (journal.getTitle() == null || journal.getTitle().isBlank()) {
             journal.setTitle("Untitled Journal Entry");
         }
@@ -106,8 +106,7 @@ public class JournalServiceImpl implements JournalService {
     @Override
     @Transactional
     public Journal updateJournal(Long userId, Long journalId, Journal updated) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Journal existing = findOwnedJournal(activeUserId, journalId);
+        Journal existing = findOwnedJournal(userId, journalId);
         // title is NOT NULL - a partial-update payload that omits it must leave
         // the existing title untouched rather than null the column at flush time,
         // matching the skip-if-null convention already used below for
@@ -164,56 +163,50 @@ public class JournalServiceImpl implements JournalService {
     @Override
     @Transactional(readOnly = true)
     public Journal getJournalById(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
-        return decryptForRead(findOwnedJournal(activeUserId, journalId));
+        return decryptForRead(findOwnedJournal(userId, journalId));
     }
 
     // Raw fetch, content left exactly as stored (ciphertext for encrypted rows).
     // Used by every internal mutation path so a subsequent save() never risks
     // persisting the decrypted-for-display content back over the ciphertext -
     // only getJournalById()/list reads route through decryptForRead().
-    private Journal findOwnedJournal(Long activeUserId, Long journalId) {
-        return journalRepository.findByIdAndUserId(journalId, activeUserId)
+    private Journal findOwnedJournal(Long userId, Long journalId) {
+        return journalRepository.findByIdAndUserId(journalId, userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Journal", "id", journalId));
     }
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<Journal> getUserJournals(Long userId, Pageable pageable) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Page<Journal> page = journalRepository.findByUserIdAndIsArchivedFalse(activeUserId, pageable);
+        Page<Journal> page = journalRepository.findByUserIdAndIsArchivedFalse(userId, pageable);
         return toPagedResponse(page);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<Journal> getPinnedJournals(Long userId, Pageable pageable) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Page<Journal> page = journalRepository.findByUserIdAndIsPinnedTrue(activeUserId, pageable);
+        Page<Journal> page = journalRepository.findByUserIdAndIsPinnedTrue(userId, pageable);
         return toPagedResponse(page);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<Journal> getFavoriteJournals(Long userId, Pageable pageable) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Page<Journal> page = journalRepository.findByUserIdAndIsFavoriteTrue(activeUserId, pageable);
+        Page<Journal> page = journalRepository.findByUserIdAndIsFavoriteTrue(userId, pageable);
         return toPagedResponse(page);
     }
 
     @Override
     @Transactional(readOnly = true)
     public PagedResponse<Journal> getArchivedJournals(Long userId, Pageable pageable) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Page<Journal> page = journalRepository.findByUserIdAndIsArchivedTrue(activeUserId, pageable);
+        Page<Journal> page = journalRepository.findByUserIdAndIsArchivedTrue(userId, pageable);
         return toPagedResponse(page);
     }
 
     @Override
     @Transactional
     public Journal togglePin(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Journal journal = findOwnedJournal(activeUserId, journalId);
+        Journal journal = findOwnedJournal(userId, journalId);
         journal.setIsPinned(!journal.getIsPinned());
         return persistAndDecrypt(journalRepository.save(journal));
     }
@@ -221,8 +214,7 @@ public class JournalServiceImpl implements JournalService {
     @Override
     @Transactional
     public Journal toggleFavorite(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Journal journal = findOwnedJournal(activeUserId, journalId);
+        Journal journal = findOwnedJournal(userId, journalId);
         journal.setIsFavorite(!journal.getIsFavorite());
         return persistAndDecrypt(journalRepository.save(journal));
     }
@@ -230,8 +222,7 @@ public class JournalServiceImpl implements JournalService {
     @Override
     @Transactional
     public Journal toggleArchive(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Journal journal = findOwnedJournal(activeUserId, journalId);
+        Journal journal = findOwnedJournal(userId, journalId);
         journal.setIsArchived(!journal.getIsArchived());
         return persistAndDecrypt(journalRepository.save(journal));
     }
@@ -239,8 +230,7 @@ public class JournalServiceImpl implements JournalService {
     @Override
     @Transactional
     public void softDeleteJournal(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
-        Journal journal = findOwnedJournal(activeUserId, journalId);
+        Journal journal = findOwnedJournal(userId, journalId);
         // Journal's @SQLDelete intercepts this into an UPDATE ... is_deleted =
         // true, not a real row removal - which is exactly right for a "trash"
         // action. @SQLRestriction("is_deleted = false") already hides it from
@@ -248,19 +238,18 @@ public class JournalServiceImpl implements JournalService {
         // surfaced by search too - see the publishJournalDeletedEvent() call
         // below.
         journalRepository.delete(journal);
-        publishJournalDeletedEvent(journalId, activeUserId);
+        publishJournalDeletedEvent(journalId, userId);
     }
 
     @Override
     @Transactional
     public void permanentDeleteJournal(Long userId, Long journalId) {
-        Long activeUserId = userId != null ? userId : 1L;
         // Ownership check via a native COUNT, not findOwnedJournal() -
         // findOwnedJournal goes through @SQLRestriction("is_deleted = false")
         // and would 404 exactly the journals this method needs to reach
         // (a journal must normally be trashed via softDeleteJournal first,
         // before "empty trash"/permanent-delete can remove it for good).
-        if (journalRepository.countByIdAndUserId(journalId, activeUserId) == 0) {
+        if (journalRepository.countByIdAndUserId(journalId, userId) == 0) {
             throw new ResourceNotFoundException("Journal", "id", journalId);
         }
         // A plain journalRepository.delete(journal) would hit the exact same
@@ -268,8 +257,8 @@ public class JournalServiceImpl implements JournalService {
         // turning "permanent" delete into the same soft-delete UPDATE - this
         // native delete bypasses that annotation entirely for a real row
         // removal (see JournalRepository.hardDeleteByIdAndUserId's comment).
-        journalRepository.hardDeleteByIdAndUserId(journalId, activeUserId);
-        publishJournalDeletedEvent(journalId, activeUserId);
+        journalRepository.hardDeleteByIdAndUserId(journalId, userId);
+        publishJournalDeletedEvent(journalId, userId);
     }
 
     @Override

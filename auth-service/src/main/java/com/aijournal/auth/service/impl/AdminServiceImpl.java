@@ -1,4 +1,5 @@
 package com.aijournal.auth.service.impl;
+import com.aijournal.common.http.RestTemplateFactory;
 
 import com.aijournal.auth.dto.UserSummaryResponse;
 import com.aijournal.auth.entity.Role;
@@ -35,7 +36,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.Executor;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 @Service
 public class AdminServiceImpl implements AdminService {
@@ -48,10 +51,18 @@ public class AdminServiceImpl implements AdminService {
     private final RefreshTokenRepository refreshTokenRepository;
     private final MfaChallengeRepository mfaChallengeRepository;
     private final MfaRecoveryCodeRepository mfaRecoveryCodeRepository;
-    private final RestTemplate restTemplate = new RestTemplate();
-    private Executor notificationExecutor = Executors.newCachedThreadPool();
+    private final RestTemplate restTemplate = RestTemplateFactory.create();
+    // Bounded (not Executors.newCachedThreadPool()) - same reasoning as
+    // AuthServiceImpl's identical field: an unbounded cached pool could spawn
+    // one native thread per best-effort notification call under a surge,
+    // until the JVM runs out of threads. CallerRunsPolicy degrades to
+    // synchronous execution on saturation instead of throwing or dropping work.
+    private Executor notificationExecutor = new ThreadPoolExecutor(
+            2, 10, 60L, TimeUnit.SECONDS,
+            new LinkedBlockingQueue<>(100),
+            new ThreadPoolExecutor.CallerRunsPolicy());
 
-    @Value("${jwt.secret:defaultSecretKeyForTestingJwtTokenValidation1234567890}")
+    @Value("${jwt.secret}")
     private String jwtSecret;
 
     @Value("${notification.service.url:http://notification-service:8087}")
