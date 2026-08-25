@@ -27,16 +27,19 @@ describe('SearchView', () => {
     mockedSearch.mockResolvedValue(apiResponse(SAMPLE_RESULTS));
   });
 
-  it('does not search on mount when the query is empty, and shows a prompt instead', async () => {
+  it('runs an initial search on mount and renders every entry', async () => {
     render(<SearchView />);
 
-    expect(await screen.findByText('Start Typing to Search')).toBeInTheDocument();
-    expect(mockedSearch).not.toHaveBeenCalled();
+    expect(await screen.findByText('Hackathon Day')).toBeInTheDocument();
+    expect(screen.getByText('Gratitude Journal')).toBeInTheDocument();
+    await waitFor(() => expect(mockedSearch).toHaveBeenCalledWith({ query: '', size: 50 }));
   });
 
   it('debounces typed queries and calls the backend with the query text only', async () => {
     const user = userEvent.setup();
     render(<SearchView />);
+    await screen.findByText('Hackathon Day');
+    mockedSearch.mockClear();
 
     await user.type(
       screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
@@ -53,11 +56,6 @@ describe('SearchView', () => {
   it('filters already-fetched results by mood pill without issuing a new search', async () => {
     const user = userEvent.setup();
     render(<SearchView />);
-
-    await user.type(
-      screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
-      'day'
-    );
     await screen.findByText('Hackathon Day');
     mockedSearch.mockClear();
 
@@ -69,15 +67,10 @@ describe('SearchView', () => {
   });
 
   it('shows a "Searching..." state while a request is in flight', async () => {
-    const user = userEvent.setup();
     let resolveSearch!: (value: ReturnType<typeof apiResponse>) => void;
     mockedSearch.mockReturnValue(new Promise((resolve) => { resolveSearch = resolve; }));
 
     render(<SearchView />);
-    await user.type(
-      screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
-      'day'
-    );
 
     expect(await screen.findByText('Searching...')).toBeInTheDocument();
 
@@ -86,29 +79,19 @@ describe('SearchView', () => {
   });
 
   it('shows an error message when the search request fails', async () => {
-    const user = userEvent.setup();
     mockedSearch.mockReset();
     mockedSearch.mockRejectedValue(new Error('network down'));
 
     render(<SearchView />);
-    await user.type(
-      screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
-      'day'
-    );
 
     expect(await screen.findByText('Search failed. Please try again.')).toBeInTheDocument();
   });
 
   it('shows the empty state when there are no matches', async () => {
-    const user = userEvent.setup();
     mockedSearch.mockReset();
     mockedSearch.mockResolvedValue(apiResponse([]));
 
     render(<SearchView />);
-    await user.type(
-      screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
-      'nothing'
-    );
 
     expect(await screen.findByText('No Matching Entries')).toBeInTheDocument();
   });
@@ -116,10 +99,6 @@ describe('SearchView', () => {
   it('sorts results client-side and re-sorts on demand', async () => {
     const user = userEvent.setup();
     render(<SearchView />);
-    await user.type(
-      screen.getByPlaceholderText('Type anything to search in real-time (e.g. hackathon, stressed, gratitude)...'),
-      'day'
-    );
     await screen.findByText('Hackathon Day');
 
     let titles = screen.getAllByRole('heading', { level: 3 }).map((h) => h.textContent);
