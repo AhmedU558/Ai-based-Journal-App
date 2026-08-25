@@ -34,18 +34,11 @@ export default function SearchView() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  // Debounced, backend-driven search - re-runs only when the query text
-  // itself changes (a real edit or a fresh entry), not on mood-pill clicks
-  // or on initial mount with an empty box. Mood filtering is applied
-  // client-side below to whatever the last real search returned.
+  // Debounced, backend-driven search - runs on mount (empty query returns
+  // every entry) and re-runs only when the query text itself changes (a
+  // real edit or a fresh entry), not on mood-pill clicks. Mood filtering is
+  // applied client-side below to whatever the last real search returned.
   useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      setError(null);
-      setLoading(false);
-      return;
-    }
-
     let cancelled = false;
     setLoading(true);
     setError(null);
@@ -85,8 +78,6 @@ export default function SearchView() {
     const bTime = new Date(b.createdAt || 0).getTime();
     return sortBy === 'newest' ? bTime - aTime : aTime - bTime;
   });
-
-  const hasQuery = query.trim().length > 0;
 
   return (
     <div className="p-8 max-w-[1100px] mx-auto flex flex-col gap-6 animate-fade-in">
@@ -148,12 +139,10 @@ export default function SearchView() {
       </div>
 
       {/* Results Header Count */}
-      {hasQuery && (
-        <div className="text-[0.85rem] text-[var(--text-secondary)] flex items-center gap-[0.4rem]">
-          <Sparkles size={14} color="#4ade80" />
-          <span>{loading ? 'Searching...' : `Found ${sortedResults.length} matching entries`}</span>
-        </div>
-      )}
+      <div className="text-[0.85rem] text-[var(--text-secondary)] flex items-center gap-[0.4rem]">
+        <Sparkles size={14} color="#4ade80" />
+        <span>{loading ? 'Searching...' : `Found ${sortedResults.length} matching entries`}</span>
+      </div>
 
       {/* Error State */}
       {error && (
@@ -164,13 +153,7 @@ export default function SearchView() {
       )}
 
       {/* Results Grid */}
-      {!hasQuery ? (
-        <div className="glass-panel p-14 text-center">
-          <Search size={44} color="#64748b" className="mb-4" />
-          <h3 className="text-[1.15rem] mb-[0.4rem]">Start Typing to Search</h3>
-          <p className="text-[var(--text-secondary)]">Enter a word or phrase above to search your journals.</p>
-        </div>
-      ) : !error && !loading && sortedResults.length === 0 ? (
+      {!error && !loading && sortedResults.length === 0 ? (
         <div className="glass-panel p-14 text-center">
           <BookOpen size={44} color="#64748b" className="mb-4" />
           <h3 className="text-[1.15rem] mb-[0.4rem]">No Matching Entries</h3>
