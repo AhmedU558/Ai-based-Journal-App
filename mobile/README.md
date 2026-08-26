@@ -53,6 +53,32 @@ Analytics deliberately doesn't pull in a charting library - the web app's rechar
 - **lucide-react-native** for icons (same component names as the web app's `lucide-react`)
 - **Jest** + **jest-expo** + **@testing-library/react-native** for tests
 
+### Deliberate dependency pins (do not "fix" these)
+
+`react-native-reanimated` is pinned to **3.19.5** (not the SDK 54 default 4.x) and
+`react-native-worklets` resolves to the local no-op `vendor/react-native-worklets-stub`
+(version `0.0.0-stub`). Both are intentional, and `babel.config.js` must keep
+`worklets: false` in its `babel-preset-expo` options - see that file's comment for the
+full explanation. Removing any one of the three reintroduces a confirmed cold-launch
+crash (`SIGABRT`, `TypeError: Cannot read property 'code' of undefined` out of
+Reanimated's `getValueUnpackerCode()`).
+
+Because these versions deliberately diverge from what the SDK expects, both packages are
+listed in `expo.install.exclude` in `package.json` so `npx expo-doctor` and
+`npx expo install --check` stop reporting them as out-of-date. Reanimated is also a
+*direct* dependency rather than a transitive one: `react-native-keyboard-controller`
+declares it as a peer dependency, and native-module peer deps must be installed directly
+or the app can crash outside Expo Go.
+
+If you ever touch any of the above, re-verify with a real bundle export before doing a
+full Gradle build - it's much faster:
+
+```bash
+npx expo export:embed --platform android --dev false \
+  --bundle-output /tmp/check.bundle --reset-cache
+grep -c "valueUnpacker.__initData=" /tmp/check.bundle   # must be >= 1
+```
+
 ## Scripts
 
 ```bash

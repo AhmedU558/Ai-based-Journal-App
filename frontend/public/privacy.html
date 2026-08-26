@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Privacy Policy — Mindora</title>
+<style>
+  :root {
+    --bg: #090d16;
+    --panel: rgba(15, 23, 42, 0.65);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #818cf8;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+  h1 { font-size: 2rem; margin: 0 0 .35rem; }
+  h2 { font-size: 1.2rem; margin: 2.4rem 0 .6rem; color: var(--accent); }
+  h3 { font-size: 1rem; margin: 1.4rem 0 .4rem; }
+  p, li { color: #cbd5e1; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .93rem; }
+  th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text); }
+  td { color: #cbd5e1; }
+  .scroll { overflow-x: auto; }
+  code { background: rgba(255,255,255,.06); padding: .1rem .35rem; border-radius: 5px; font-size: .9em; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#ffffff; --panel:#f8fafc; --border:rgba(0,0,0,.1); --text:#0f172a; --muted:#475569; --accent:#4f46e5; }
+    p, li, td { color: #334155; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Privacy Policy</h1>
+  <p class="meta">Mindora — <strong>Effective date: REPLACE_WITH_DATE</strong></p>
+
+  <p>Mindora is a personal journaling application with AI-assisted features. This policy explains what
+  information we collect, why, who it is shared with, and the choices you have. It covers both the Mindora
+  Android app and the Mindora website at mindorajournal.com, which share the same account and backend.</p>
+
+  <div class="panel">
+    <strong>The short version.</strong> We collect what is needed to run your account and store your journal.
+    We do not sell your data, show you ads, or use third-party advertising or analytics trackers. Your journal
+    entries are private to your account. When you use an AI feature, the relevant text is sent to Google's
+    Gemini API to generate that result — see <a href="#third-parties">Third parties</a>. You can delete your
+    account and its data at any time.
+  </div>
+
+  <h2>1. Information we collect</h2>
+
+  <h3>Information you provide</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>Data</th><th>Why</th></tr>
+    <tr><td>Username, email address, full name</td><td>To create and identify your account, and to send account-related email.</td></tr>
+    <tr><td>Password</td><td>To authenticate you. Stored only as a bcrypt hash — never in plain text, and not recoverable by us.</td></tr>
+    <tr><td>Journal entries (title, body, mood, tags)</td><td>The core function of the app: to store and display your journal.</td></tr>
+    <tr><td>Optional profile details (bio, profile picture, phone number, country, city)</td><td>To personalize your profile. All optional; leaving them blank does not limit the app.</td></tr>
+    <tr><td>Preferences (theme, notification settings, reminder time)</td><td>To keep your settings consistent across devices.</td></tr>
+  </table>
+  </div>
+
+  <h3>Information collected automatically</h3>
+  <div class="scroll">
+  <table>
+    <tr><th>Data</th><th>Why</th></tr>
+    <tr><td>Login history: IP address, browser/device user agent, success or failure, timestamp</td><td>Security. It lets you review account access and helps detect unauthorized sign-in attempts. Visible to you in Settings.</td></tr>
+    <tr><td>Push notification token and platform</td><td>Only if you enable notifications, so reminders can reach your device.</td></tr>
+    <tr><td>Derived mood and sentiment data</td><td>Generated from your entries to power mood tracking and analytics.</td></tr>
+    <tr><td>Two-factor authentication data</td><td>If you enable 2FA: an encrypted authenticator secret and hashed recovery codes.</td></tr>
+  </table>
+  </div>
+
+  <p>We do not collect your precise location, contacts, photos beyond a profile picture you deliberately
+  choose, microphone audio, or advertising identifiers. The app contains no third-party advertising or
+  analytics SDKs.</p>
+
+  <h2 id="third-parties">2. Third parties who process your data</h2>
+
+  <p>We do not sell your personal information or share it for advertising. We share the minimum necessary
+  with the following providers so specific features can work:</p>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Provider</th><th>What is sent</th><th>When</th></tr>
+    <tr>
+      <td><strong>Google</strong> (Gemini API)</td>
+      <td>The journal text or chat message relevant to the request</td>
+      <td>Only when you actively use an AI feature: mood detection, summarize, rephrase, fix grammar, continue writing, auto-tags, or AI chat. Nothing is sent to Google unless you trigger one of these.</td>
+    </tr>
+    <tr>
+      <td><strong>Cloudflare</strong> (Turnstile)</td>
+      <td>IP address and bot-detection signals</td>
+      <td>On sign-in and registration, to block automated abuse.</td>
+    </tr>
+    <tr>
+      <td><strong>Expo</strong> (push service)</td>
+      <td>Your device push token and the notification text</td>
+      <td>Only if you enable push notifications.</td>
+    </tr>
+    <tr>
+      <td><strong>Our email provider</strong></td>
+      <td>Your email address and the message</td>
+      <td>For account email only: welcome, email verification, password reset, and security alerts. No marketing email.</td>
+    </tr>
+  </table>
+  </div>
+
+  <p>These providers process the data to deliver their service and are subject to their own privacy terms.
+  We may also disclose information where required by law, or to protect the rights and safety of our users.</p>
+
+  <h2>3. How your data is protected</h2>
+  <ul>
+    <li>All traffic between your device and our servers is encrypted using HTTPS/TLS.</li>
+    <li>Journal entry content is encrypted at rest (AES-256-GCM) in our primary database.</li>
+    <li>Passwords are stored as bcrypt hashes; two-factor secrets are encrypted and recovery codes hashed.</li>
+    <li>Access is authenticated with short-lived tokens, and optional two-factor authentication is available.</li>
+  </ul>
+  <p>For transparency: to make search work, journal titles and content are also held in a search index in
+  unencrypted form on our own infrastructure. That index is not exposed publicly and is access-controlled,
+  but it is not covered by the at-rest encryption described above. No security measure is perfect, and we
+  cannot guarantee absolute security.</p>
+
+  <h2>4. How long we keep it</h2>
+  <p>We keep your account data for as long as your account exists. Deleting your account removes your
+  profile and preferences and revokes your active sessions. Short-lived security records — password reset
+  codes, email verification codes, and sign-in tokens — expire automatically. Backups and logs may persist
+  for a limited period before being overwritten.</p>
+
+  <h2>5. Your choices and rights</h2>
+  <ul>
+    <li><strong>Access and correction</strong> — view and edit your profile and entries in the app at any time.</li>
+    <li><strong>Deletion</strong> — delete individual entries, or delete your entire account from Settings.</li>
+    <li><strong>Notifications</strong> — turn push notifications off in the app or in your device settings.</li>
+    <li><strong>AI features</strong> — these are opt-in per use. If you never tap them, your entries are not sent to an AI provider.</li>
+  </ul>
+  <p>Depending on where you live, you may have additional rights over your personal data, including
+  portability and the right to object to certain processing. Contact us to make a request.</p>
+
+  <h2>6. Children</h2>
+  <p>Mindora is not directed to children under 13, and we do not knowingly collect their personal
+  information. If you believe a child has provided us information, contact us and we will delete it.</p>
+
+  <h2>7. Changes to this policy</h2>
+  <p>If we make material changes, we will update the effective date above and, where appropriate, notify you
+  in the app. Continued use after an update means you accept the revised policy.</p>
+
+  <h2>8. Contact</h2>
+  <p>Questions or requests about this policy or your data: <a href="mailto:REPLACE_WITH_CONTACT_EMAIL">REPLACE_WITH_CONTACT_EMAIL</a></p>
+
+</div>
+</body>
+</html>

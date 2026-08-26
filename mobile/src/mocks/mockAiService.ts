@@ -57,4 +57,45 @@ export const mockAiService = {
     const reply = keywordChatReply(query);
     return new Promise((resolve) => setTimeout(() => resolve(reply), CHAT_DELAY_MS));
   },
+
+  // The four editor-toolbar helpers. Like every other mock here these are
+  // deterministic transforms of the real input rather than fixed strings, so
+  // the UI can be exercised meaningfully in Pass A - but they are plainly not
+  // a model, matching this repo's rule against mocks that look like real AI.
+  async summarize(content: string): Promise<string> {
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    const firstSentence = trimmed.split(/(?<=[.!?])\s+/)[0] || trimmed;
+    const words = trimmed.split(/\s+/).length;
+    const summary = `${firstSentence.slice(0, 140)} (${words} words, mood: ${keywordMood(trimmed)})`;
+    return new Promise((resolve) => setTimeout(() => resolve(summary), ARTIFICIAL_DELAY_MS));
+  },
+
+  async rephrase(content: string): Promise<string> {
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    // Mirrors python-ai-service's non-ML fallback shape: a real, visible
+    // transformation of the input, not invented prose.
+    const rephrased = `Expressing this more clearly: ${trimmed.charAt(0).toLowerCase()}${trimmed.slice(1)}`;
+    return new Promise((resolve) => setTimeout(() => resolve(rephrased), ARTIFICIAL_DELAY_MS));
+  },
+
+  async fixGrammar(content: string): Promise<string> {
+    const trimmed = content.trim();
+    if (!trimmed) return '';
+    // Genuinely applies a few mechanical corrections rather than pretending.
+    const corrected = trimmed
+      .replace(/\bi\b/g, 'I')
+      .replace(/\s+([,.!?])/g, '$1')
+      .replace(/\s{2,}/g, ' ')
+      .replace(/([.!?])([A-Za-z])/g, '$1 $2');
+    return new Promise((resolve) => setTimeout(() => resolve(corrected), ARTIFICIAL_DELAY_MS));
+  },
+
+  async generateTags(content: string): Promise<string[]> {
+    const trimmed = content.trim();
+    if (!trimmed) return [];
+    const tags = [keywordMood(trimmed).toLowerCase(), 'journal', 'reflection'];
+    return new Promise((resolve) => setTimeout(() => resolve(tags), ARTIFICIAL_DELAY_MS));
+  },
 };

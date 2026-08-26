@@ -22,8 +22,26 @@ api.interceptors.request.use(async (config) => {
 // circular-import evaluation-order issue (authService also imports this module).
 const AUTH_ENDPOINTS_NO_REFRESH = ['/api/v1/auth/login', '/api/v1/auth/register', '/api/v1/auth/refresh'];
 
+// A successful authenticated request is real app usage, so it should extend the
+// 10-minute sliding session the same way a tap does (see RootNavigator's
+// activity handler). This is the half that covers *typing*: a user composing a
+// long entry drives debounced mood-detection/search calls without necessarily
+// touching the screen again, and would otherwise be logged out mid-sentence.
+// touchSession() only extends an unexpired session, so this can never resurrect
+// one that has already lapsed. Throttled to match the web app's 30s.
+let lastTouch = 0;
+function touchSessionThrottled() {
+  const now = Date.now();
+  if (now - lastTouch < 30000) return;
+  lastTouch = now;
+  session.touchSession().catch(() => {});
+}
+
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    touchSessionThrottled();
+    return response;
+  },
   async (error) => {
     const originalRequest = error.config;
     const isAuthEndpoint = originalRequest?.url && AUTH_ENDPOINTS_NO_REFRESH.some((p: string) => originalRequest.url.includes(p));

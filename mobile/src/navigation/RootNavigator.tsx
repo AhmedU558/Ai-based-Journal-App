@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { View, ActivityIndicator } from 'react-native';
 import { NavigationContainer, DarkTheme, createNavigationContainerRef } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import * as Notifications from 'expo-notifications';
 import { LayoutDashboard, BookOpen, CalendarDays, Search, MessageCircle, BarChart3, Settings as SettingsIcon } from 'lucide-react-native';
 import { useAuthContext } from '@/context/AuthContext';
+import { authService } from '@/services';
 import type { AuthStackParamList, MainStackParamList, MainTabParamList } from './types';
 
 import LoginScreen from '@/screens/LoginScreen';
@@ -135,6 +136,24 @@ function MainNavigator() {
 export function RootNavigator() {
   const { isAuthenticated, checking } = useAuthContext();
 
+  // Real user activity extends the 10-minute session. session.touchSession()
+  // shipped with the original port but was never wired to anything, so the
+  // "sliding" expiry was in fact a flat 10-minute countdown from login: an
+  // actively-used app logged the user out mid-session. (The web app hit the
+  // identical bug and fixed it in App.jsx with DOM activity listeners; this is
+  // the RN equivalent.) onTouchStart on an ancestor View still fires for
+  // touches landing on descendants, so this observes taps and the start of
+  // scrolls/swipes app-wide without intercepting any of them. Typing is
+  // covered separately by api.ts's response interceptor. Throttled to 30s to
+  // match the web app and to keep this off the per-touch hot path.
+  const lastTouch = useRef(0);
+  const handleActivity = useCallback(() => {
+    const now = Date.now();
+    if (now - lastTouch.current < 30000) return;
+    lastTouch.current = now;
+    authService.touchSession();
+  }, []);
+
   // Tapping a delivered reminder (see notification-service's ReminderScheduler)
   // takes the user straight into a new journal entry - the whole point of the
   // nudge is to get them writing, not just to open the app to the Dashboard.
@@ -156,8 +175,10 @@ export function RootNavigator() {
   }
 
   return (
-    <NavigationContainer ref={navigationRef} theme={NAV_THEME}>
-      {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
-    </NavigationContainer>
+    <View style={{ flex: 1 }} onTouchStart={handleActivity}>
+      <NavigationContainer ref={navigationRef} theme={NAV_THEME}>
+        {isAuthenticated ? <MainNavigator /> : <AuthNavigator />}
+      </NavigationContainer>
+    </View>
   );
 }

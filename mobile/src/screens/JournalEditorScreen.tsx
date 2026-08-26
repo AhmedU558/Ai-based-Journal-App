@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { View, Text, Pressable, ScrollView } from 'react-native';
 import { KeyboardAvoidingView } from 'react-native-keyboard-controller';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,6 +12,7 @@ import { ConfettiBurst } from '@/components/ui/ConfettiBurst';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import MoodWheel from '@/components/MoodWheel';
 import { MOOD_META, type Mood } from '@/lib/moods';
+import { cn } from '@/lib/utils';
 import { journalService, aiService } from '@/services';
 import type { MainStackParamList } from '@/navigation/types';
 import type { JournalRef } from '@/types';
@@ -63,6 +64,18 @@ export default function JournalEditorScreen() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [showConfetti, setShowConfetti] = useState(false);
+  // One shared flag for the three content-rewriting actions (rephrase / fix
+  // grammar / continue writing) so they can't run concurrently and clobber
+  // each other's result - the same single `aiWriting` flag the web editor uses.
+  // `aiAction` drives the per-button label so the user can tell which one is
+  // running. Summarize and auto-tags get their own flags: neither rewrites
+  // `content`, so there is no reason to block them against the others.
+  const [aiWriting, setAiWriting] = useState(false);
+  const [aiAction, setAiAction] = useState<'rephrase' | 'grammar' | 'continue' | null>(null);
+  const [summarizing, setSummarizing] = useState(false);
+  const [tagging, setTagging] = useState(false);
+  const [summary, setSummary] = useState('');
+  const [aiNotice, setAiNotice] = useState('');
 
   const handleContentChange = (val: string) => {
     setContent(val);
@@ -77,12 +90,23 @@ export default function JournalEditorScreen() {
   const charCount = content.length;
 
   // Asynchronous AI mood sync (250ms debounce) - same timing as JournalEditor.tsx.
+  // clearTimeout below only cancels a debounce timer that hasn't fired yet - it
+  // cannot cancel a detectMood request already in flight. Without this counter,
+  // two overlapping requests (pause typing, resume, pause again) that resolve
+  // out of order let the older response overwrite the newer mood. That is worse
+  // here than on the web app, where the same bug is display-only: handleSave
+  // persists this `mood` state directly, so a stale response can be saved onto
+  // the entry. Only the most recent request is allowed to touch state.
+  const moodRequestId = useRef(0);
+
   useEffect(() => {
     if (!content.trim() || content.trim().length < 3 || isManualOverride) return;
     const timer = setTimeout(async () => {
+      const requestId = ++moodRequestId.current;
       setDetectingMood(true);
       try {
         const res = await aiService.detectMood(content);
+        if (requestId !== moodRequestId.current) return;
         if (res?.primaryMood) {
           const detectedKey = normalizeMood(res.primaryMood);
           setMood(detectedKey);
@@ -97,7 +121,11 @@ export default function JournalEditorScreen() {
       } catch {
         // AI error fallback - keep the instant-heuristic mood already set.
       } finally {
-        setDetectingMood(false);
+        // Same staleness check: a superseded request finishing must not clear
+        // the spinner while the newer one is still running.
+        if (requestId === moodRequestId.current) {
+          setDetectingMood(false);
+        }
       }
     }, 250);
     return () => clearTimeout(timer);
@@ -112,6 +140,92 @@ export default function JournalEditorScreen() {
   };
 
   const handleRemoveTag = (tag: string) => setTags((prev) => prev.filter((t) => t !== tag));
+
+  // --- AI writing assistant -------------------------------------------------
+  // Ports the web editor's toolbar (frontend/src/components/JournalEditor.tsx).
+  // RN has no toast host on this screen, so feedback goes to an inline notice
+  // line instead; failures surface there too rather than being swallowed.
+  //
+  // Rewriting `content` here counts as a manual edit for mood purposes: it
+  // flows through handleContentChange so the debounced re-detection re-runs on
+  // the new text, rather than leaving the previous text's mood attached.
+  const runContentAction = async (
+    action: 'rephrase' | 'grammar' | 'continue',
+    label: string,
+    fn: () => Promise<string>,
+    apply: (result: string) => string
+  ) => {
+    if (!content.trim() || aiWriting) return;
+    setAiWriting(true);
+    setAiAction(action);
+    setAiNotice('');
+    try {
+      const result = await fn();
+      if (result) {
+        handleContentChange(apply(result));
+        setAiNotice(`${label} applied.`);
+      } else {
+        setAiNotice(`${label} returned nothing to apply.`);
+      }
+    } catch {
+      setAiNotice(`${label} failed. Please try again.`);
+    } finally {
+      setAiWriting(false);
+      setAiAction(null);
+    }
+  };
+
+  const handleRephrase = () =>
+    runContentAction('rephrase', 'Rephrase', () => aiService.rephrase(content), (r) => r);
+
+  const handleFixGrammar = () =>
+    runContentAction('grammar', 'Grammar fix', () => aiService.fixGrammar(content), (r) => r);
+
+  // Continue-writing has no endpoint of its own - it asks /chat for the next
+  // couple of sentences and appends them, exactly as the web editor does.
+  const handleContinueWriting = () =>
+    runContentAction(
+      'continue',
+      'Continue writing',
+      () => aiService.chat(`Continue writing the next two sentences for this journal reflection: "${content}"`),
+      (r) => `${content.trim()} ${r}`
+    );
+
+  const handleSummarize = async () => {
+    if (!content.trim() || summarizing) return;
+    setSummarizing(true);
+    setAiNotice('');
+    try {
+      const short = await aiService.summarize(content);
+      if (short) setSummary(short);
+      else setAiNotice('Summary returned nothing to show.');
+    } catch {
+      setAiNotice('Summarize failed. Please try again.');
+    } finally {
+      setSummarizing(false);
+    }
+  };
+
+  const handleAutoTags = async () => {
+    if (!content.trim() || tagging) return;
+    setTagging(true);
+    setAiNotice('');
+    try {
+      const generated = await aiService.generateTags(content);
+      if (generated.length) {
+        // Union with existing tags - auto-tagging adds, never replaces what
+        // the user typed themselves.
+        setTags((prev) => Array.from(new Set([...prev, ...generated])));
+        setAiNotice('AI tags added.');
+      } else {
+        setAiNotice('No tags were suggested.');
+      }
+    } catch {
+      setAiNotice('Auto-tagging failed. Please try again.');
+    } finally {
+      setTagging(false);
+    }
+  };
 
   const handleSave = async () => {
     if (!title.trim() || !content.trim()) {
@@ -171,6 +285,59 @@ export default function JournalEditorScreen() {
               className="min-h-[160px] leading-6"
             />
           </View>
+
+          {/* AI writing assistant - mirrors the web editor's toolbar. Every
+              button is disabled with no content, since all of them operate on
+              it. Wraps to a second row on narrow screens rather than
+              overflowing. */}
+          <View>
+            <View className="flex-row items-center gap-2 mb-2">
+              <Sparkles size={14} color="#818cf8" />
+              <Text className="text-[#cbd5e1] text-sm font-semibold">AI Assistant</Text>
+            </View>
+            <View className="flex-row flex-wrap gap-2">
+              {(
+                [
+                  { key: 'rephrase', idle: 'Rephrase', busy: 'Rephrasing...', running: aiAction === 'rephrase', disabled: aiWriting, onPress: handleRephrase },
+                  { key: 'grammar', idle: 'Fix Grammar', busy: 'Fixing...', running: aiAction === 'grammar', disabled: aiWriting, onPress: handleFixGrammar },
+                  { key: 'continue', idle: 'Continue Writing', busy: 'Writing...', running: aiAction === 'continue', disabled: aiWriting, onPress: handleContinueWriting },
+                  { key: 'summarize', idle: 'Summarize', busy: 'Summarizing...', running: summarizing, disabled: summarizing, onPress: handleSummarize },
+                  { key: 'tags', idle: 'Auto-Tags', busy: 'Tagging...', running: tagging, disabled: tagging, onPress: handleAutoTags },
+                ] as const
+              ).map((btn) => {
+                const blocked = btn.disabled || !content.trim();
+                return (
+                  <Pressable
+                    key={btn.key}
+                    onPress={btn.onPress}
+                    disabled={blocked}
+                    className={cn(
+                      'py-2 px-3 rounded-xl border',
+                      blocked
+                        ? 'bg-white/[0.03] border-white/[0.06]'
+                        : 'bg-[rgba(99,102,241,0.15)] border-[rgba(99,102,241,0.4)]'
+                    )}
+                  >
+                    <Text className={cn('text-xs font-semibold', blocked ? 'text-text-muted' : 'text-[#a5b4fc]')}>
+                      {btn.running ? btn.busy : btn.idle}
+                    </Text>
+                  </Pressable>
+                );
+              })}
+            </View>
+
+            {aiNotice ? <Text className="text-text-muted text-xs mt-2">{aiNotice}</Text> : null}
+          </View>
+
+          {summary ? (
+            <View className="bg-[rgba(99,102,241,0.15)] border border-[rgba(99,102,241,0.3)] p-4 rounded-2xl">
+              <View className="flex-row items-center gap-2 mb-1">
+                <Sparkles size={14} color="#818cf8" />
+                <Text className="text-[#818cf8] text-xs font-bold">AI Summary</Text>
+              </View>
+              <Text className="text-white text-sm leading-5">{summary}</Text>
+            </View>
+          ) : null}
 
           <GlassPanel className="p-4">
             <View className="flex-row items-center justify-between mb-3">
