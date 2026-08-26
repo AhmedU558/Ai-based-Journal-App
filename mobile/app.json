@@ -31,7 +31,10 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "tagline": "Your thoughts. Your story. Your AI companion."
+      "tagline": "Your thoughts. Your story. Your AI companion.",
+      "eas": {
+        "projectId": "95827926-10b4-4d13-8f60-3b87cc5fe85f"
+      }
     },
     "plugins": [
       [
@@ -50,6 +53,7 @@
           "photosPermission": "Mindora needs access to your photos so you can set a profile picture."
         }
       ]
-    ]
+    ],
+    "owner": "ahmedu558"
   }
 }
