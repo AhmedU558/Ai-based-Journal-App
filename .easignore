@@ -1,0 +1,92 @@
+# EAS Build ignore rules for the Mindora mobile app.
+#
+# This lives at the REPO ROOT on purpose. Even though `eas build` runs from
+# mobile/, EAS uploads the whole monorepo - the builder path is
+# /home/expo/workingdir/build/mobile/android - so the ignore file it reads is
+# the one at the archive root. A mobile/.easignore is never consulted.
+#
+# Three build failures came out of getting this wrong, in order:
+#
+# 1. With no .easignore, EAS falls back to .gitignore, whose `*.jar` rule
+#    (correct for a Java monorepo) stripped
+#    android/gradle/wrapper/gradle-wrapper.jar from the upload while shipping
+#    the rest of android/. Gradle had no wrapper to run:
+#      Error: Unable to access jarfile .../android/gradle/wrapper/gradle-wrapper.jar
+#    So there is deliberately NO `*.jar` rule here.
+#
+# 2. Putting the file in mobile/ changed nothing - android/ still arrived and
+#    prebuild logged "Created native directory | reusing /android", reusing the
+#    broken upload instead of generating a clean one.
+#
+# 3. Excluding everything via `/*` and re-admitting `!/mobile/` produced an
+#    80-byte archive: EAS's matcher does not honour that re-include. Hence the
+#    explicit list below rather than a whitelist - it is more verbose, but it
+#    behaves predictably.
+
+# --- Backend and web: irrelevant to an Android build, and most of the upload.
+ai-service/
+analytics-service/
+auth-service/
+common-library/
+discovery-server/
+file-service/
+gateway-service/
+journal-service/
+notification-service/
+python-ai-service/
+recommendation-service/
+search-service/
+user-service/
+frontend/
+docs/
+k8s/
+node_modules/
+.git/
+.github/
+.claude/
+.githooks/
+
+# --- Native projects are generated, not authored. Both are gitignored locally
+# and rebuilt by prebuild; excluding them is what forces EAS to run a real
+# prebuild, so the builder produces its own wrapper and cannot inherit ours.
+mobile/android/
+mobile/ios/
+
+# --- Installed on the builder.
+mobile/node_modules/
+
+# --- Expo / Metro local state
+mobile/.expo/
+mobile/dist/
+mobile/web-build/
+mobile/expo-env.d.ts
+mobile/.metro-health-check*
+
+# --- Local env: the production build takes its values from eas.json's `env`
+# block, so uploading a local .env would only risk overriding them.
+mobile/.env
+mobile/.env*.local
+
+# --- Play Store assets: needed for the listing, not for compiling the app.
+mobile/play-assets/
+
+# --- Signing material must never be uploaded.
+mobile/*.jks
+mobile/*.p8
+mobile/*.p12
+mobile/*.key
+mobile/*.mobileprovision
+mobile/*.pem
+
+# --- Build outputs
+mobile/*.apk
+mobile/*.aab
+
+# --- Misc
+mobile/.kotlin/
+mobile/*.orig.*
+mobile/*.tsbuildinfo
+mobile/npm-debug.*
+mobile/yarn-debug.*
+mobile/yarn-error.*
+mobile/.DS_Store
