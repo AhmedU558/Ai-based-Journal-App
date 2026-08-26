@@ -19,17 +19,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <script src="https://challenges.cloudflare.com/turnstile/v0/api.js" async defer></script>
   <style>
-    /* overflow-x: auto is a deliberate safety net, not decoration - if the
-       widget ever renders wider than the WebView's viewport for any reason,
-       the user can scroll to reach the parts a hard clip would otherwise
-       hide entirely (confirmed live: the checkbox and Cloudflare branding
-       were unreachable, not just visually cut off, before this was added). */
-    html, body { margin: 0; padding: 0; background: transparent; overflow-x: auto; }
-    body { display: flex; align-items: center; min-height: 100vh; }
+    /* Turnstile renders at a fixed ~300px regardless of the size we request
+       (the dashboard-configured widget mode wins). On a narrow device the
+       WebView viewport is smaller than that - ~262 CSS px on a 720px screen
+       at ~2.75 density - so the widget overflowed and was clipped on both
+       edges: half the status icon gone on the left, the Cloudflare wordmark
+       and Privacy/Terms links cut off on the right, and its rounded frame
+       sliced into a hard white line top and bottom.
+       #scaler shrinks the whole widget to whatever room actually exists (see
+       fit() below), so it is fully visible instead of merely scrollable. */
+    html, body { margin: 0; padding: 0; background: transparent; overflow: hidden; }
+    body { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+    #scaler { transform-origin: center center; }
   </style>
 </head>
 <body>
-  <div id="widget"></div>
+  <div id="scaler"><div id="widget"></div></div>
   <script>
     var params = new URLSearchParams(window.location.search);
     var action = params.get('action') || 'login';
@@ -39,6 +44,52 @@
       if (window.ReactNativeWebView) {
         window.ReactNativeWebView.postMessage(JSON.stringify(payload));
       }
+    }
+
+    // Scale the rendered widget down to whatever width the WebView actually
+    // has. Turnstile injects its content asynchronously and can resize itself
+    // (an interactive challenge is taller than the passive one), so this runs
+    // on a ResizeObserver rather than once after render.
+    var lastReported = 0;
+
+    function fit() {
+      var scaler = document.getElementById('scaler');
+      if (!scaler) return;
+      // Measure unscaled, otherwise each pass compounds the previous scale.
+      scaler.style.transform = 'none';
+      var rect = scaler.getBoundingClientRect();
+      var naturalW = rect.width;
+      var naturalH = rect.height;
+      var available = document.documentElement.clientWidth;
+      if (!naturalW || !available) return;
+
+      // Scale on width only. Height is handled by telling the host how tall
+      // we ended up and letting it resize its container - scaling to fit the
+      // current height instead would shrink the widget to whatever box it
+      // already has, which is backwards when an interactive challenge needs
+      // MORE room than the passive one.
+      var scale = Math.min(1, available / naturalW);
+      scaler.style.transform = scale < 1 ? 'scale(' + scale + ')' : 'none';
+
+      // Report the post-scale height so the host container tracks the widget
+      // across devices and challenge types. Rounded and de-duplicated so a
+      // sub-pixel reflow does not spam the bridge.
+      var scaledH = Math.ceil(naturalH * scale);
+      if (scaledH && scaledH !== lastReported) {
+        lastReported = scaledH;
+        post({ type: 'size', height: scaledH });
+      }
+    }
+
+    function watchSize() {
+      var widget = document.getElementById('widget');
+      if (window.ResizeObserver && widget) {
+        new ResizeObserver(fit).observe(widget);
+      }
+      window.addEventListener('resize', fit);
+      // Belt and braces for the first paint, in case the observer misses the
+      // initial injection.
+      [100, 400, 1200, 3000].forEach(function (ms) { setTimeout(fit, ms); });
     }
 
     function render() {
@@ -59,10 +110,15 @@
         // WebView container to fit this, with horizontal scroll as a
         // fallback if it still doesn't on some device.
         size: 'normal',
-        callback: function (token) { post({ type: 'verify', token: token }); },
+        callback: function (token) { fit(); post({ type: 'verify', token: token }); },
         'expired-callback': function () { post({ type: 'expire' }); },
-        'error-callback': function () { post({ type: 'error' }); },
+        // Forward Turnstile's error code - without it a failure is
+        // indistinguishable from the widget simply never finishing, which is
+        // exactly what made the WebView user-agent problem so hard to spot.
+        'error-callback': function (code) { post({ type: 'error', code: String(code || '') }); },
       });
+      watchSize();
+      fit();
     }
     render();
   </script>
