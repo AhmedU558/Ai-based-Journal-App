@@ -17,6 +17,21 @@ const refreshClient = axios.create({
   withCredentials: true,
 });
 
+// Single-flight guard for refreshAccessToken(). Refresh tokens are single-use
+// and rotate server-side: AuthServiceImpl.refreshToken() does an atomic
+// delete-and-check, so of two concurrent /refresh calls exactly one wins and
+// the other comes back "Refresh token was already used". The httpOnly cookie
+// does not help here - both requests carry the same cookie value, since the
+// second is sent before the first request's rotated Set-Cookie lands.
+//
+// Without this, any view issuing two authenticated requests in parallel
+// against an expired access token produces two refreshes, and api.js's 401
+// handler logs the user out on the loser. SettingsModal does it twice, and
+// App.jsx's auth-mount effect fires refreshEmailVerified() and
+// refreshNotifications() back to back - so this fired on opening Settings or
+// returning to an idle tab.
+let inFlightRefresh = null;
+
 export const authService = {
   // Login user and set 10-minute session expiry
   login: async (usernameOrEmail, password, turnstileToken) => {
@@ -56,13 +71,28 @@ export const authService = {
   // if the cookie is missing, expired, or already revoked - callers should
   // treat a throw here as "the session is over, log out."
   refreshAccessToken: async () => {
-    const res = await refreshClient.post('/api/v1/auth/refresh', {});
-    const authData = res?.data?.data;
-    if (!authData?.accessToken) {
-      throw new Error('Refresh response missing an access token');
+    // Join an already-running refresh rather than starting a competing one -
+    // see inFlightRefresh above for why a second concurrent call logs the
+    // user out of a perfectly valid session.
+    if (inFlightRefresh) return inFlightRefresh;
+
+    inFlightRefresh = (async () => {
+      const res = await refreshClient.post('/api/v1/auth/refresh', {});
+      const authData = res?.data?.data;
+      if (!authData?.accessToken) {
+        throw new Error('Refresh response missing an access token');
+      }
+      authService.setSession(authData.accessToken, authData.refreshToken, authData.userId, authData.username);
+      return authData.accessToken;
+    })();
+
+    try {
+      return await inFlightRefresh;
+    } finally {
+      // Cleared on success and failure alike, so a later 401 can retry
+      // instead of forever re-awaiting one settled (possibly rejected) promise.
+      inFlightRefresh = null;
     }
-    authService.setSession(authData.accessToken, authData.refreshToken, authData.userId, authData.username);
-    return authData.accessToken;
   },
 
   // Get the authenticated user's real identity (username/email/fullName) -
