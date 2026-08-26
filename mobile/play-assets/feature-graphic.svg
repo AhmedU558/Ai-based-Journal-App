@@ -1,0 +1,87 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="500" viewBox="0 0 1024 500">
+  <defs>
+    <linearGradient id="ground" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0b1020"/>
+      <stop offset="55%" stop-color="#090d16"/>
+      <stop offset="100%" stop-color="#0d1224"/>
+    </linearGradient>
+
+    <radialGradient id="glow" cx="0.72" cy="0.5" r="0.55">
+      <stop offset="0%" stop-color="#6366f1" stop-opacity="0.30"/>
+      <stop offset="60%" stop-color="#6366f1" stop-opacity="0.07"/>
+      <stop offset="100%" stop-color="#6366f1" stop-opacity="0"/>
+    </radialGradient>
+
+    <linearGradient id="wordmark" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="70%" stop-color="#e8ebff"/>
+      <stop offset="100%" stop-color="#b9c0ff"/>
+    </linearGradient>
+
+    <filter id="soft" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="26"/>
+    </filter>
+    <filter id="softer" x="-70%" y="-70%" width="240%" height="240%">
+      <feGaussianBlur stdDeviation="46"/>
+    </filter>
+  </defs>
+
+  <!-- ground -->
+  <rect width="1024" height="500" fill="url(#ground)"/>
+  <rect width="1024" height="500" fill="url(#glow)"/>
+
+  <!-- Mood spectrum: the seven moods Mindora actually tracks, as an arc of
+       soft orbs. Colours are lifted verbatim from src/lib/moods.ts. -->
+  <g filter="url(#softer)" opacity="0.55">
+    <circle cx="742" cy="196" r="52" fill="#4ade80"/>
+    <circle cx="820" cy="158" r="46" fill="#fde047"/>
+    <circle cx="894" cy="188" r="50" fill="#38bdf8"/>
+    <circle cx="928" cy="264" r="44" fill="#c084fc"/>
+    <circle cx="884" cy="336" r="48" fill="#fb7185"/>
+    <circle cx="800" cy="356" r="42" fill="#f87171"/>
+    <circle cx="734" cy="300" r="46" fill="#818cf8"/>
+  </g>
+
+  <g filter="url(#soft)" opacity="0.92">
+    <circle cx="742" cy="196" r="17" fill="#4ade80"/>
+    <circle cx="820" cy="158" r="15" fill="#fde047"/>
+    <circle cx="894" cy="188" r="16" fill="#38bdf8"/>
+    <circle cx="928" cy="264" r="14" fill="#c084fc"/>
+    <circle cx="884" cy="336" r="15" fill="#fb7185"/>
+    <circle cx="800" cy="356" r="13" fill="#f87171"/>
+    <circle cx="734" cy="300" r="15" fill="#818cf8"/>
+  </g>
+
+  <!-- crisp cores -->
+  <circle cx="742" cy="196" r="6" fill="#eafff2"/>
+  <circle cx="820" cy="158" r="5.5" fill="#fffbe6"/>
+  <circle cx="894" cy="188" r="6" fill="#e6f7ff"/>
+  <circle cx="928" cy="264" r="5" fill="#f6ecff"/>
+  <circle cx="884" cy="336" r="5.5" fill="#ffeef1"/>
+  <circle cx="800" cy="356" r="5" fill="#ffeded"/>
+  <circle cx="734" cy="300" r="5.5" fill="#eef0ff"/>
+
+  <!-- connecting thread: one continuous line through the moods, the arc a
+       journal traces over time -->
+  <path d="M734 300 L742 196 L820 158 L894 188 L928 264 L884 336 L800 356 Z"
+        fill="none" stroke="#8f9bff" stroke-opacity="0.28" stroke-width="1.5"/>
+
+  <!-- wordmark block, held well inside the safe area -->
+  <g transform="translate(88, 0)">
+    <text x="0" y="228"
+          font-family="Segoe UI Semibold, Segoe UI, Helvetica Neue, Arial, sans-serif"
+          font-size="92" font-weight="600" letter-spacing="-2.5"
+          fill="url(#wordmark)">Mindora</text>
+
+    <rect x="4" y="256" width="72" height="3" rx="1.5" fill="#818cf8"/>
+
+    <text x="0" y="312"
+          font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
+          font-size="27" font-weight="400" letter-spacing="0.2"
+          fill="#aab3c9">Your thoughts. Your story.</text>
+    <text x="0" y="350"
+          font-family="Segoe UI, Helvetica Neue, Arial, sans-serif"
+          font-size="27" font-weight="400" letter-spacing="0.2"
+          fill="#aab3c9">Your AI companion.</text>
+  </g>
+</svg>
