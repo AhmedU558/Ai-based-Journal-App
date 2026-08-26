@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { View, Text } from 'react-native';
 import { WebView, type WebViewMessageEvent } from 'react-native-webview';
-import { WEB_BASE_URL } from '@/config/env';
+import { USE_MOCKS, WEB_BASE_URL } from '@/config/env';
 
 // Cloudflare has no official React Native SDK - the standard workaround is
 // embedding the real web widget inside a WebView and bridging the token
@@ -27,6 +27,21 @@ interface TurnstileGateProps {
 export function TurnstileGate({ action, onVerify, resetKey }: TurnstileGateProps) {
   const [error, setError] = useState('');
 
+  // Pass A (EXPO_PUBLIC_USE_MOCKS=true) is documented as running entirely
+  // against the local mock service layer with no backend required - but the
+  // login and register screens both refuse to submit without a Turnstile
+  // token, so a real Cloudflare challenge (and therefore real network, and a
+  // reachable frontend origin) was still mandatory to get past the first
+  // screen. mockAuthService already ignores the token it is handed, so the
+  // check was gating the mock flow on infrastructure the mock flow exists to
+  // avoid. Hand the screens a placeholder immediately instead, and render
+  // nothing.
+  useEffect(() => {
+    if (!USE_MOCKS) return;
+    onVerify('mock-turnstile-token');
+  }, [resetKey, onVerify]);
+
+  if (USE_MOCKS) return null;
   if (!SITE_KEY) return null;
 
   const embedUrl = `${WEB_BASE_URL}/turnstile-embed.html?action=${action}&sitekey=${encodeURIComponent(SITE_KEY)}`;
