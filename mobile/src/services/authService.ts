@@ -15,6 +15,18 @@ const refreshClient = axios.create({
   headers: { 'Content-Type': 'application/json' },
 });
 
+// Single-flight guard for refreshAccessToken(). Refresh tokens are single-use
+// and rotate server-side: AuthServiceImpl.refreshToken() does an atomic
+// delete-and-check, so of two concurrent /refresh calls carrying the same
+// token exactly one wins and the other gets "Refresh token was already used".
+// Without this guard, any screen firing two authenticated requests in parallel
+// (SettingsScreen does exactly that) against an expired access token would
+// produce two simultaneous refreshes - one succeeds, the loser's 401 handler
+// calls logout(), and the user is kicked out of a perfectly valid session.
+// Callers arriving while a refresh is in flight now await that same promise
+// and all receive the one newly-issued access token.
+let inFlightRefresh: Promise<string> | null = null;
+
 async function persistIfIssued(data: AuthResult, fallbackUsername?: string) {
   if (data?.accessToken) {
     await session.setSession(data.accessToken, data.refreshToken, data.userId, data.username || fallbackUsername);
@@ -44,17 +56,32 @@ export const authService = {
   },
 
   async refreshAccessToken(): Promise<string> {
-    const refreshToken = await session.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error('No refresh token available');
+    // Join an already-running refresh instead of starting a competing one -
+    // see inFlightRefresh's comment above for why a second concurrent call
+    // would otherwise log the user out.
+    if (inFlightRefresh) return inFlightRefresh;
+
+    inFlightRefresh = (async () => {
+      const refreshToken = await session.getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('No refresh token available');
+      }
+      const res = await refreshClient.post('/api/v1/auth/refresh', { refreshToken });
+      const data: AuthResult = res?.data?.data || {};
+      if (!data.accessToken) {
+        throw new Error('Refresh response missing an access token');
+      }
+      await session.setSession(data.accessToken, data.refreshToken, data.userId, data.username);
+      return data.accessToken;
+    })();
+
+    try {
+      return await inFlightRefresh;
+    } finally {
+      // Cleared on both success and failure so a later 401 can retry rather
+      // than forever re-awaiting one settled (possibly rejected) promise.
+      inFlightRefresh = null;
     }
-    const res = await refreshClient.post('/api/v1/auth/refresh', { refreshToken });
-    const data: AuthResult = res?.data?.data || {};
-    if (!data.accessToken) {
-      throw new Error('Refresh response missing an access token');
-    }
-    await session.setSession(data.accessToken, data.refreshToken, data.userId, data.username);
-    return data.accessToken;
   },
 
   async getCurrentUser(): Promise<CurrentUser> {
