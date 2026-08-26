@@ -1,0 +1,59 @@
+# EAS Build uses this file INSTEAD of .gitignore when deciding what to upload,
+# so it has to be self-contained - anything omitted here gets uploaded even if
+# .gitignore excludes it.
+#
+# It exists because of one specific failure. The repo root's .gitignore has
+# `*.jar` (correct for a Java monorepo - it keeps build artifacts out), but EAS
+# applied that rule to this project too and stripped
+# android/gradle/wrapper/gradle-wrapper.jar out of the upload while shipping the
+# rest of android/. The builder then had a Gradle project with no wrapper and
+# failed immediately:
+#
+#   Error: Unable to access jarfile .../android/gradle/wrapper/gradle-wrapper.jar
+#
+# Deliberately NO `*.jar` rule here.
+
+node_modules/
+
+# Native projects are generated, not authored - excluding them makes EAS run
+# `expo prebuild` and produce clean ones on the builder, which is what this
+# project expects (both are gitignored locally too). It also sidesteps the
+# wrapper-jar problem entirely, since the builder generates its own.
+/android
+/ios
+
+# Expo / Metro
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+.metro-health-check*
+
+# Local env - the production build gets its values from eas.json's `env` block,
+# so shipping a local .env would only risk overriding them.
+.env
+.env*.local
+
+# Store assets: needed for the Play listing, not for compiling the app.
+play-assets/
+
+# Signing material must never be uploaded.
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.pem
+
+# Build outputs
+*.apk
+*.aab
+
+# Misc
+.kotlin/
+*.orig.*
+*.tsbuildinfo
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+.DS_Store
