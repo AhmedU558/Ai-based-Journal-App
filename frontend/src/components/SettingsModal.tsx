@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent, type ReactNode } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, ShieldCheck, Palette, AlertCircle, Users, Camera } from 'lucide-react';
+import { X, User, ShieldCheck, Palette, AlertCircle, Users, Camera, Trash2 } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { cn } from '@/lib/utils';
 import { authService } from '@/services/authService';
@@ -31,6 +31,7 @@ interface SettingsModalProps {
   onClose: () => void;
   onEmailVerified?: () => void;
   onAvatarChanged?: () => void;
+  onAccountDeleted?: () => void;
 }
 
 interface CurrentUser {
@@ -47,7 +48,7 @@ interface ProfileData {
   city?: string;
 }
 
-export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvatarChanged }: SettingsModalProps) {
+export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvatarChanged, onAccountDeleted }: SettingsModalProps) {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
   const isAdmin = authService.isAdmin();
   const panelRef = useModalA11y(isOpen, onClose);
@@ -95,7 +96,7 @@ export default function SettingsModal({ isOpen, onClose, onEmailVerified, onAvat
             {/* Inner Tab Content */}
             <div className="flex-1 p-6 overflow-y-auto">
               {activeTab === 'profile' && <ProfileTab isOpen={isOpen} onAvatarChanged={onAvatarChanged} />}
-              {activeTab === 'security' && <SecurityTab isOpen={isOpen} onEmailVerified={onEmailVerified} />}
+              {activeTab === 'security' && <SecurityTab isOpen={isOpen} onEmailVerified={onEmailVerified} onAccountDeleted={onAccountDeleted} />}
 
               {activeTab === 'appearance' && (
                 <div className="flex flex-col gap-5">
@@ -399,7 +400,7 @@ function ProfileTab({ isOpen, onAvatarChanged }: { isOpen: boolean; onAvatarChan
   );
 }
 
-function SecurityTab({ isOpen, onEmailVerified }: { isOpen: boolean; onEmailVerified?: () => void }) {
+function SecurityTab({ isOpen, onEmailVerified, onAccountDeleted }: { isOpen: boolean; onEmailVerified?: () => void; onAccountDeleted?: () => void }) {
   const [mfaEnabled, setMfaEnabled] = useState<boolean | null>(null);
   const [mfaLoadError, setMfaLoadError] = useState('');
   const [emailVerified, setEmailVerified] = useState<boolean | null>(null);
@@ -451,6 +452,112 @@ function SecurityTab({ isOpen, onEmailVerified }: { isOpen: boolean; onEmailVeri
       )}
 
       <LoginHistorySection isOpen={isOpen} />
+
+      <DeleteAccountSection onAccountDeleted={onAccountDeleted} />
+    </div>
+  );
+}
+
+// Google Play requires any app offering account creation to provide a way to
+// delete that account - both in-app and via a URL reachable without the app.
+// userService.deleteAccount() and the backend behind it already existed and
+// were complete (auth-service delete is mandatory and aborts the whole
+// operation if it fails, so a user can never end up able to log in with their
+// data gone); nothing had ever called them. This is that caller, and it
+// doubles as the web deletion URL the Play listing points at.
+function DeleteAccountSection({ onAccountDeleted }: { onAccountDeleted?: () => void }) {
+  const [confirming, setConfirming] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
+
+  const canDelete = confirmText.trim().toUpperCase() === 'DELETE';
+
+  const handleDelete = async () => {
+    if (!canDelete || deleting) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await userService.deleteAccount();
+      // The account is gone, so the session is meaningless - hand off to the
+      // app shell, which clears local state and returns to the login view.
+      onAccountDeleted?.();
+    } catch (err: any) {
+      setError(err?.message || 'Could not delete your account. Please try again.');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <div className="border border-[rgba(239,68,68,0.35)] bg-[rgba(239,68,68,0.06)] rounded-2xl p-5 flex flex-col gap-3">
+      <div className="flex items-center gap-2">
+        <Trash2 size={18} className="text-[#f87171]" />
+        <h4 className="text-[0.95rem] font-bold text-[#f87171]">Delete account</h4>
+      </div>
+
+      <p className="text-[0.85rem] text-[var(--text-secondary)] leading-[1.5]">
+        Permanently deletes your account, journal entries, uploaded files, profile and
+        preferences. This cannot be undone, and your entries cannot be recovered afterwards.
+      </p>
+
+      {error && (
+        <div className="bg-[rgba(239,68,68,0.15)] border border-[rgba(239,68,68,0.3)] text-[#f87171] py-2 px-3 rounded-lg flex items-center gap-2 text-[0.85rem]">
+          <AlertCircle size={16} />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {!confirming ? (
+        <button
+          type="button"
+          onClick={() => setConfirming(true)}
+          className="self-start border border-[rgba(239,68,68,0.5)] text-[#f87171] py-2 px-4 rounded-xl text-[0.85rem] font-semibold cursor-pointer hover:bg-[rgba(239,68,68,0.12)]"
+        >
+          Delete my account
+        </button>
+      ) : (
+        <div className="flex flex-col gap-2">
+          <label htmlFor="delete-confirm" className="text-[0.8rem] text-[var(--text-secondary)]">
+            Type <strong className="text-[var(--text-primary)]">DELETE</strong> to confirm
+          </label>
+          <input
+            id="delete-confirm"
+            className="glass-input"
+            value={confirmText}
+            onChange={(e) => setConfirmText(e.target.value)}
+            placeholder="DELETE"
+            autoComplete="off"
+            disabled={deleting}
+          />
+          <div className="flex gap-2">
+            <button
+              type="button"
+              onClick={handleDelete}
+              disabled={!canDelete || deleting}
+              className={cn(
+                'py-2 px-4 rounded-xl text-[0.85rem] font-semibold',
+                canDelete && !deleting
+                  ? 'bg-[#dc2626] text-white cursor-pointer hover:bg-[#b91c1c]'
+                  : 'bg-[rgba(239,68,68,0.2)] text-[rgba(248,113,113,0.6)] cursor-not-allowed'
+              )}
+            >
+              {deleting ? 'Deleting...' : 'Permanently delete'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setConfirming(false);
+                setConfirmText('');
+                setError('');
+              }}
+              disabled={deleting}
+              className="py-2 px-4 rounded-xl text-[0.85rem] text-[var(--text-secondary)] border border-[var(--text-primary)]/10 cursor-pointer"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

@@ -306,6 +306,16 @@ export default function App() {
     showToast('Logged out.', 'info');
   };
 
+  // Account deletion leaves the same local state behind as a logout - the
+  // session, cached per-account UI flags, the avatar object URL - so it reuses
+  // handleLogout's teardown rather than duplicating it. Only the modal dismissal
+  // and the message differ: there is no account to come back to.
+  const handleAccountDeleted = () => {
+    setIsSettingsOpen(false);
+    handleLogout();
+    showToast('Your account and all its data have been deleted.', 'info');
+  };
+
   const handleNewJournal = () => {
     navigate('/journals/new');
   };
@@ -390,6 +400,7 @@ export default function App() {
           onClose={() => setIsSettingsOpen(false)}
           onEmailVerified={refreshEmailVerified}
           onAvatarChanged={refreshAvatar}
+          onAccountDeleted={handleAccountDeleted}
         />
         <AchievementsModal
           isOpen={isAchievementsOpen}

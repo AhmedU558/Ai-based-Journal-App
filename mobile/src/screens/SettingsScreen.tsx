@@ -13,6 +13,7 @@ import { ErrorBanner } from '@/components/ErrorBanner';
 import { FadeInView } from '@/components/ui/FadeInView';
 import { cn } from '@/lib/utils';
 import { authService, userService, fileService } from '@/services';
+import { useAuthContext } from '@/context/AuthContext';
 import type { CurrentUser, ProfileData, MfaSetupData, LoginHistoryEntry } from '@/types';
 
 type SettingsTab = 'profile' | 'security';
@@ -311,10 +312,113 @@ function SecuritySection() {
             )}
 
             <LoginHistorySection />
+
+            <DeleteAccountSection />
           </View>
         </FadeInView>
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+
+// Google Play requires any app offering account creation to provide an in-app
+// way to delete that account. userService.deleteAccount() and the backend
+// behind it were already complete - auth-service's delete runs first and
+// aborts everything if it fails, so a user can never be left able to log in
+// with their data gone - but nothing had ever called them from either client.
+function DeleteAccountSection() {
+  const { logout } = useAuthContext();
+  const [confirming, setConfirming] = useState(false);
+  const [confirmText, setConfirmText] = useState('');
+  const [deleting, setDeleting] = useState(false);
+  const [error, setError] = useState('');
+
+  const canDelete = confirmText.trim().toUpperCase() === 'DELETE';
+
+  const handleDelete = async () => {
+    if (!canDelete || deleting) return;
+    setDeleting(true);
+    setError('');
+    try {
+      await userService.deleteAccount();
+      // The account no longer exists, so the stored session is meaningless.
+      // logout() also clears the offline queue and cache, which matters here:
+      // leaving a deleted account's unsynced entries on the device would
+      // replay them against whoever logs in next.
+      await logout();
+    } catch (err: any) {
+      setError(err?.message || 'Could not delete your account. Please try again.');
+      setDeleting(false);
+    }
+  };
+
+  return (
+    <GlassPanel className="p-4 border border-[rgba(239,68,68,0.35)]">
+      <View className="flex-row items-center gap-2 mb-2">
+        <Trash2 size={16} color="#f87171" />
+        <Text className="text-[#f87171] text-sm font-bold">Delete account</Text>
+      </View>
+
+      <Text className="text-text-secondary text-xs leading-5 mb-3">
+        Permanently deletes your account, journal entries, uploaded files, profile and
+        preferences. This cannot be undone.
+      </Text>
+
+      {error ? <ErrorBanner message={error} /> : null}
+
+      {!confirming ? (
+        <Pressable
+          onPress={() => setConfirming(true)}
+          className="self-start border border-[rgba(239,68,68,0.5)] py-2 px-4 rounded-xl"
+        >
+          <Text className="text-[#f87171] text-xs font-semibold">Delete my account</Text>
+        </Pressable>
+      ) : (
+        <View className="gap-2">
+          <Text className="text-text-secondary text-xs">
+            Type <Text className="text-text-primary font-bold">DELETE</Text> to confirm
+          </Text>
+          <GlassInput
+            value={confirmText}
+            onChangeText={setConfirmText}
+            placeholder="DELETE"
+            autoCapitalize="characters"
+            autoCorrect={false}
+            editable={!deleting}
+          />
+          <View className="flex-row gap-2">
+            <Pressable
+              onPress={handleDelete}
+              disabled={!canDelete || deleting}
+              className={cn(
+                'py-2 px-4 rounded-xl',
+                canDelete && !deleting ? 'bg-[#dc2626]' : 'bg-[rgba(239,68,68,0.2)]'
+              )}
+            >
+              <Text
+                className={cn(
+                  'text-xs font-semibold',
+                  canDelete && !deleting ? 'text-white' : 'text-[rgba(248,113,113,0.6)]'
+                )}
+              >
+                {deleting ? 'Deleting...' : 'Permanently delete'}
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setConfirming(false);
+                setConfirmText('');
+                setError('');
+              }}
+              disabled={deleting}
+              className="py-2 px-4 rounded-xl border border-white/10"
+            >
+              <Text className="text-text-secondary text-xs">Cancel</Text>
+            </Pressable>
+          </View>
+        </View>
+      )}
+    </GlassPanel>
   );
 }
 
