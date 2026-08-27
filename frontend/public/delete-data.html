@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Delete your data — Mindora</title>
+<style>
+  :root {
+    --bg: #090d16;
+    --panel: rgba(15, 23, 42, 0.65);
+    --border: rgba(255, 255, 255, 0.08);
+    --text: #f8fafc;
+    --muted: #94a3b8;
+    --accent: #818cf8;
+    --danger: #f87171;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    line-height: 1.65;
+  }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 3rem 1.25rem 5rem; }
+  h1 { font-size: 2rem; margin: 0 0 .35rem; }
+  h2 { font-size: 1.2rem; margin: 2.4rem 0 .6rem; color: var(--accent); }
+  h3 { font-size: 1rem; margin: 1.4rem 0 .4rem; }
+  p, li { color: #cbd5e1; }
+  a { color: var(--accent); }
+  .meta { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+  .panel {
+    background: var(--panel);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.1rem 1.25rem;
+    margin: 1.5rem 0;
+  }
+  ol.steps { margin: 0; padding-left: 1.2rem; display: flex; flex-direction: column; gap: .5rem; }
+  ul.plain { margin: .4rem 0 0; padding-left: 1.1rem; display: flex; flex-direction: column; gap: .3rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; font-size: .93rem; }
+  th, td { text-align: left; padding: .6rem .5rem; border-bottom: 1px solid var(--border); vertical-align: top; }
+  th { color: var(--text); }
+  td { color: #cbd5e1; }
+  .scroll { overflow-x: auto; }
+  code { background: rgba(255,255,255,.06); padding: .1rem .35rem; border-radius: 5px; font-size: .9em; }
+  @media (prefers-color-scheme: light) {
+    :root { --bg:#ffffff; --panel:#f8fafc; --border:rgba(0,0,0,.1); --text:#0f172a; --muted:#475569; --accent:#4f46e5; --danger:#b91c1c; }
+    p, li, td { color: #334155; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <h1>Delete your Mindora data</h1>
+  <p class="meta">Mindora — AI Journal &amp; Mood · <strong>Last updated: August 27, 2026</strong></p>
+
+  <p>This page explains how to delete your <strong>Mindora</strong> account, or just parts of your
+  data, and exactly what is removed when you do. You can do all of it yourself from inside the app
+  or from the website — no request form, no waiting on a reply from us.</p>
+
+  <div class="panel">
+    <strong>In short.</strong> Deleting your account removes your sign-in, your journal entries,
+    your uploaded files and your profile. It is immediate and irreversible. You can also delete
+    individual journal entries or your profile picture at any time without touching your account.
+  </div>
+
+  <h2>1. Delete your entire account</h2>
+
+  <h3>From the website</h3>
+  <ol class="steps">
+    <li>Go to <a href="https://mindorajournal.com">mindorajournal.com</a> and sign in.</li>
+    <li>Open <strong>Settings</strong> from the profile menu.</li>
+    <li>Select the <strong>Security &amp; Sessions</strong> tab.</li>
+    <li>Scroll to <strong>Delete account</strong> at the bottom.</li>
+    <li>Click <strong>Delete my account</strong>, type <code>DELETE</code> to confirm, then click
+        <strong>Permanently delete</strong>.</li>
+  </ol>
+
+  <h3>From the Android app</h3>
+  <ol class="steps">
+    <li>Open <strong>Mindora</strong> and sign in.</li>
+    <li>Tap <strong>Settings</strong> in the bottom navigation bar.</li>
+    <li>Select the <strong>Security</strong> tab.</li>
+    <li>Scroll to <strong>Delete account</strong>.</li>
+    <li>Tap <strong>Delete my account</strong>, type <code>DELETE</code> to confirm, then tap
+        <strong>Permanently delete</strong>.</li>
+  </ol>
+
+  <p>You are signed out immediately afterwards, and the account can no longer be used to sign in.</p>
+
+  <h2>2. Delete only some of your data</h2>
+  <p>You do not have to delete your account to remove specific things:</p>
+  <ul class="plain">
+    <li><strong>A journal entry</strong> — open it from the journal list and delete it. Entries you
+        delete are removed from search as well.</li>
+    <li><strong>Your profile picture</strong> — Settings → Profile → remove the photo. The stored
+        image file is deleted too.</li>
+    <li><strong>Profile details</strong> — clear your bio, phone number, city or country in
+        Settings → Profile and save.</li>
+  </ul>
+
+  <h2>3. What is deleted, and what is kept</h2>
+
+  <div class="scroll">
+  <table>
+    <tr><th>Data</th><th>When you delete your account</th></tr>
+    <tr><td>Sign-in credentials (username, email, password)</td><td>Deleted. This happens first — if it fails, nothing else is deleted, so you can never be left able to sign in with your data already gone.</td></tr>
+    <tr><td>Two-factor authentication secret and recovery codes</td><td>Deleted</td></tr>
+    <tr><td>Active sessions and sign-in tokens</td><td>Deleted (revoked immediately)</td></tr>
+    <tr><td>Journal entries, moods and tags</td><td>Deleted, including from the search index</td></tr>
+    <tr><td>Uploaded files (profile picture)</td><td>Deleted</td></tr>
+    <tr><td>Profile details (bio, phone, city, country)</td><td>Deleted</td></tr>
+    <tr><td>Preferences (theme, notification settings)</td><td>Deleted</td></tr>
+    <tr><td>Sign-in history (IP address, device, timestamps)</td><td>Deleted with the account</td></tr>
+    <tr><td>Push notification token</td><td>Deleted; the device stops receiving reminders</td></tr>
+  </table>
+  </div>
+
+  <h3>Retention</h3>
+  <p>Deletion takes effect immediately — there is no grace period during which you can recover a
+  deleted account, and we cannot restore one for you. Routine encrypted backups and server logs
+  may still contain incidental records for a short period before they are overwritten in the normal
+  backup rotation; these are not accessible from the app and are not used for any purpose.</p>
+
+  <h2>4. If you cannot access your account</h2>
+  <p>If you have lost your password, use <strong>Forgot password?</strong> on the sign-in screen to
+  regain access, then follow the steps above. If you still cannot sign in and want your data
+  deleted, email us at
+  <a href="mailto:aqvionlabs@gmail.com">aqvionlabs@gmail.com</a> from the address on the account
+  and we will remove it for you.</p>
+
+  <h2>Contact</h2>
+  <p>Questions about deleting your data:
+  <a href="mailto:aqvionlabs@gmail.com">aqvionlabs@gmail.com</a><br />
+  See also our <a href="/privacy.html">Privacy Policy</a>.</p>
+
+</div>
+</body>
+</html>
