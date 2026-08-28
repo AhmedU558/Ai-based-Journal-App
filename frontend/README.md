@@ -37,4 +37,20 @@ src/
   main.jsx      entry point, wraps App in BrowserRouter
 ```
 
+## Routes
+
+Logged out, only two routes render: `/` is the marketing landing page
+(`LandingView`) and `/login` is the sign-in / registration form (`AuthView`).
+Anything else redirects to `/login` rather than `/`, so a bookmarked
+`/dashboard` lands somewhere you can act on instead of a marketing pitch.
+
+`/download` is checked ahead of the auth gate and renders either way.
+
+Logged in, `/` and `/login` both fall through the catch-all to `/dashboard`.
+
+Both `LandingView` and `AuthView` are eagerly imported on purpose - `/` is what
+a fresh visitor hits, so lazy-loading it would move a chunk fetch onto the LCP
+path that the lazy-loading in `App.jsx` exists to protect. The five modals that
+fix was actually about are still lazy.
+
 Every new component added since the TypeScript/Tailwind migration started ships as `.tsx` with at least a smoke test alongside it (`Component.test.tsx`).
