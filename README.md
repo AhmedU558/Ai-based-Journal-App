@@ -120,5 +120,5 @@ Some backend tests (journal-service's repository/messaging tests, user-service's
 - `python-ai-service/` - Flask NLP service, called by `ai-service`.
 - `frontend/` - React 19 + TypeScript + Tailwind v4 SPA.
 - `k8s/` - Kubernetes manifests for every service.
-- `docs/` - architecture/ER diagrams, a Postman collection, and committed OpenAPI spec snapshots covering the full API.
+- `docs/` - architecture/ER diagrams, a Postman collection, committed OpenAPI spec snapshots covering the full API, and [docs/DEPLOY.md](docs/DEPLOY.md) (how production is actually deployed - the server is not a git checkout and nothing about it is automated, so read it before touching prod).
 - `CLIENT_HANDOFF_GUIDE.md` - a feature walkthrough/demo script, not developer documentation.

@@ -260,7 +260,7 @@ services:
     container_name: journal-frontend-prod
     restart: always
     # Bound to localhost only: a host-level nginx (outside this compose file,
-    # see the deploy runbook) terminates TLS on 80/443 and reverse-proxies to
+    # see docs/DEPLOY.md) terminates TLS on 80/443 and reverse-proxies to
     # this port, so the container itself must not also claim the public port.
     ports:
       - "127.0.0.1:3001:3000"
