@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlassInput } from '@/components/ui/GlassInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { MindoraLogo } from '@/components/ui/MindoraLogo';
 import { TurnstileGate } from '@/components/ui/TurnstileGate';
@@ -79,7 +80,7 @@ export default function LoginScreen({ navigation }: Props) {
               </View>
               <View>
                 <Text className="text-[#cbd5e1] text-sm font-medium mb-2">Password</Text>
-                <GlassInput secureTextEntry placeholder="••••••••••••" value={password} onChangeText={setPassword} />
+                <PasswordInput placeholder="••••••••••••" value={password} onChangeText={setPassword} />
                 <Pressable onPress={() => navigation.navigate('ForgotPassword')} className="mt-2 self-start">
                   <Text className="text-accent-indigo text-xs">Forgot password?</Text>
                 </Pressable>

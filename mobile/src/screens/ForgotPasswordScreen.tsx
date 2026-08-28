@@ -6,6 +6,7 @@ import { KeyRound, ArrowRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlassInput } from '@/components/ui/GlassInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { ErrorBanner } from '@/components/ErrorBanner';
 import { FadeInView } from '@/components/ui/FadeInView';
@@ -119,13 +120,12 @@ export default function ForgotPasswordScreen({ navigation }: Props) {
                 </View>
                 <View>
                   <Text className="text-[#cbd5e1] text-sm font-medium mb-2">New Password</Text>
-                  <GlassInput secureTextEntry placeholder="••••••••••••" value={newPassword} onChangeText={setNewPassword} />
+                  <PasswordInput placeholder="••••••••••••" value={newPassword} onChangeText={setNewPassword} />
                 </View>
                 <View>
                   <Text className="text-[#cbd5e1] text-sm font-medium mb-2">Confirm New Password</Text>
-                  <GlassInput
-                    secureTextEntry
-                    placeholder="••••••••••••"
+                  <PasswordInput
+                    placeholder="Re-enter your new password"
                     value={confirmNewPassword}
                     onChangeText={setConfirmNewPassword}
                   />
