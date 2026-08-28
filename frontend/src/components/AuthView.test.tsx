@@ -105,10 +105,43 @@ describe('AuthView', () => {
     await user.type(screen.getByPlaceholderText('Choose a username'), 'alex_dev');
     await user.type(screen.getByPlaceholderText('Enter your email'), 'alex@example.com');
     await user.type(screen.getByPlaceholderText('••••••••••••'), 'Hunter2!');
+    await user.type(screen.getByPlaceholderText('Re-enter your password'), 'Hunter2!');
     await user.click(screen.getByRole('button', { name: /Create Account/ }));
 
     expect(mockedRegister).toHaveBeenCalledWith('alex_dev', 'alex@example.com', 'Hunter2!', 'Alex Example', 'test-turnstile-token');
     expect(onLoginSuccess).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks registration when the confirm-password field does not match, without calling register', async () => {
+    const user = userEvent.setup();
+    const onLoginSuccess = vi.fn();
+    render(<AuthView onLoginSuccess={onLoginSuccess} />);
+
+    await user.click(screen.getByText(/Don't have an account\?/));
+    await user.type(screen.getByPlaceholderText('Enter your full name'), 'Alex Example');
+    await user.type(screen.getByPlaceholderText('Choose a username'), 'alex_dev');
+    await user.type(screen.getByPlaceholderText('Enter your email'), 'alex@example.com');
+    await user.type(screen.getByPlaceholderText('••••••••••••'), 'Hunter2!');
+    await user.type(screen.getByPlaceholderText('Re-enter your password'), 'Hunter3!');
+    await user.click(screen.getByRole('button', { name: /Create Account/ }));
+
+    expect(mockedRegister).not.toHaveBeenCalled();
+    expect(onLoginSuccess).not.toHaveBeenCalled();
+    expect(await screen.findByText('Passwords do not match.')).toBeInTheDocument();
+  });
+
+  it('reveals and re-hides the password when the show-password toggle is clicked', async () => {
+    const user = userEvent.setup();
+    render(<AuthView onLoginSuccess={vi.fn()} />);
+
+    const field = screen.getByPlaceholderText('••••••••••••');
+    expect(field).toHaveAttribute('type', 'password');
+
+    await user.click(screen.getByRole('button', { name: 'Show password' }));
+    expect(field).toHaveAttribute('type', 'text');
+
+    await user.click(screen.getByRole('button', { name: 'Hide password' }));
+    expect(field).toHaveAttribute('type', 'password');
   });
 
   it('switches to the MFA challenge step when login requires it, without calling onLoginSuccess', async () => {
@@ -241,7 +274,10 @@ describe('AuthView', () => {
     await screen.findByText('Enter Reset Code');
 
     await user.type(screen.getByPlaceholderText('XXXXX-XXXXX'), 'ABCDE-12345');
-    const passwordInputs = screen.getAllByPlaceholderText('••••••••••••');
+    const passwordInputs = [
+      screen.getByPlaceholderText('••••••••••••'),
+      screen.getByPlaceholderText('Re-enter your new password'),
+    ];
     await user.type(passwordInputs[0], 'NewPass1!');
     await user.type(passwordInputs[1], 'Different1!');
     await user.click(screen.getByRole('button', { name: /Reset Password/ }));
@@ -262,7 +298,10 @@ describe('AuthView', () => {
     await screen.findByText('Enter Reset Code');
 
     await user.type(screen.getByPlaceholderText('XXXXX-XXXXX'), 'ABCDE-12345');
-    const passwordInputs = screen.getAllByPlaceholderText('••••••••••••');
+    const passwordInputs = [
+      screen.getByPlaceholderText('••••••••••••'),
+      screen.getByPlaceholderText('Re-enter your new password'),
+    ];
     await user.type(passwordInputs[0], 'NewPass1!');
     await user.type(passwordInputs[1], 'NewPass1!');
     await user.click(screen.getByRole('button', { name: /Reset Password/ }));
@@ -284,7 +323,10 @@ describe('AuthView', () => {
     await screen.findByText('Enter Reset Code');
 
     await user.type(screen.getByPlaceholderText('XXXXX-XXXXX'), 'BADCODE');
-    const passwordInputs = screen.getAllByPlaceholderText('••••••••••••');
+    const passwordInputs = [
+      screen.getByPlaceholderText('••••••••••••'),
+      screen.getByPlaceholderText('Re-enter your new password'),
+    ];
     await user.type(passwordInputs[0], 'NewPass1!');
     await user.type(passwordInputs[1], 'NewPass1!');
     await user.click(screen.getByRole('button', { name: /Reset Password/ }));
