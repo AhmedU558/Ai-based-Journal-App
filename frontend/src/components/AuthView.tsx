@@ -1,8 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { Lock, Mail, User, ArrowRight, ShieldCheck, KeyRound, Check, Circle, Smartphone } from 'lucide-react';
+import { Mail, User, ArrowRight, ShieldCheck, KeyRound, Check, Circle, Smartphone } from 'lucide-react';
 import { authService } from '@/services/authService';
 import MindoraMark from './MindoraMark';
 import TurnstileWidget from './TurnstileWidget';
+import PasswordInput from './PasswordInput';
 
 interface AuthViewProps {
   onLoginSuccess: () => void;
@@ -13,6 +14,7 @@ interface AuthFormData {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
   fullName: string;
 }
 
@@ -73,6 +75,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
     username: '',
     email: '',
     password: '',
+    confirmPassword: '',
     fullName: '',
   });
   const [error, setError] = useState('');
@@ -101,6 +104,15 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError('');
+
+    // Checked before the CAPTCHA guard on purpose: a mismatch is the user's to
+    // fix and telling them about the CAPTCHA first buries the real problem.
+    // Returning here leaves turnstileToken unspent - no request went out - so
+    // the retry reuses it rather than forcing a fresh challenge.
+    if (!isLogin && formData.password !== formData.confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
     if (!turnstileToken) {
       setError('Please complete the CAPTCHA verification.');
@@ -377,39 +389,29 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
 
             <div>
               <label className={LABEL_CLASS}>New Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  minLength={8}
-                  maxLength={12}
-                  pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,12}"
-                  title="8-12 characters, including one uppercase letter, one number, and one special character"
-                  className="glass-input pl-[2.6rem]"
-                  placeholder="••••••••••••"
-                  value={newPassword}
-                  onChange={(e) => setNewPassword(e.target.value)}
-                  onFocus={() => setResetPasswordFocused(true)}
-                  onBlur={() => setResetPasswordFocused(false)}
-                />
-                <Lock size={18} color="#64748b" className={ICON_CLASS} />
-              </div>
+              <PasswordInput
+                required
+                minLength={8}
+                maxLength={12}
+                pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,12}"
+                title="8-12 characters, including one uppercase letter, one number, and one special character"
+                placeholder="••••••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                onFocus={() => setResetPasswordFocused(true)}
+                onBlur={() => setResetPasswordFocused(false)}
+              />
               {resetPasswordFocused && <PasswordStrengthMeter password={newPassword} />}
             </div>
 
             <div>
               <label className={LABEL_CLASS}>Confirm New Password</label>
-              <div className="relative">
-                <input
-                  type="password"
-                  required
-                  className="glass-input pl-[2.6rem]"
-                  placeholder="••••••••••••"
-                  value={confirmNewPassword}
-                  onChange={(e) => setConfirmNewPassword(e.target.value)}
-                />
-                <Lock size={18} color="#64748b" className={ICON_CLASS} />
-              </div>
+              <PasswordInput
+                required
+                placeholder="Re-enter your new password"
+                value={confirmNewPassword}
+                onChange={(e) => setConfirmNewPassword(e.target.value)}
+              />
             </div>
 
             <button type="submit" disabled={loading} className="btn-primary w-full mt-2 p-[0.85rem]">
@@ -512,9 +514,7 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
 
           <div>
             <label className={LABEL_CLASS}>Password</label>
-            <div className="relative">
-              <input
-                type="password"
+              <PasswordInput
                 required
                 {...(!isLogin && {
                   minLength: 8,
@@ -522,15 +522,12 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
                   pattern: '(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,12}',
                   title: '8-12 characters, including one uppercase letter, one number, and one special character',
                 })}
-                className="glass-input pl-[2.6rem]"
                 placeholder="••••••••••••"
                 value={formData.password}
                 onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                 onFocus={() => setRegisterPasswordFocused(true)}
                 onBlur={() => setRegisterPasswordFocused(false)}
               />
-              <Lock size={18} color="#64748b" className={ICON_CLASS} />
-            </div>
             {!isLogin && registerPasswordFocused && <PasswordStrengthMeter password={formData.password} />}
             {isLogin && (
               <button
@@ -546,6 +543,18 @@ export default function AuthView({ onLoginSuccess, onNavigateToDownload }: AuthV
               </button>
             )}
           </div>
+
+          {!isLogin && (
+            <div>
+              <label className={LABEL_CLASS}>Confirm Password</label>
+              <PasswordInput
+                required
+                placeholder="Re-enter your password"
+                value={formData.confirmPassword}
+                onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+              />
+            </div>
+          )}
 
           <TurnstileWidget
             action={isLogin ? 'login' : 'register'}

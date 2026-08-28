@@ -7,6 +7,7 @@ import QRCode from 'react-native-qrcode-svg';
 import { User, ShieldCheck, CheckCircle2, Camera, Trash2 } from 'lucide-react-native';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlassInput } from '@/components/ui/GlassInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { SkeletonBlock } from '@/components/ui/SkeletonBlock';
 import { ErrorBanner } from '@/components/ErrorBanner';
@@ -579,9 +580,9 @@ function PasswordChangeSection() {
   return (
     <GlassPanel className="p-4 gap-3">
       <Text className="text-text-primary text-sm font-semibold mb-1">Change Password</Text>
-      <GlassInput secureTextEntry placeholder="Current password" value={currentPassword} onChangeText={setCurrentPassword} />
-      <GlassInput secureTextEntry placeholder="New password" value={newPassword} onChangeText={setNewPassword} />
-      <GlassInput secureTextEntry placeholder="Confirm new password" value={confirmNewPassword} onChangeText={setConfirmNewPassword} />
+      <PasswordInput placeholder="Current password" value={currentPassword} onChangeText={setCurrentPassword} />
+      <PasswordInput placeholder="New password" value={newPassword} onChangeText={setNewPassword} />
+      <PasswordInput placeholder="Confirm new password" value={confirmNewPassword} onChangeText={setConfirmNewPassword} />
       {message ? <Text className="text-text-secondary text-xs">{message}</Text> : null}
       <Pressable
         onPress={handleSubmit}
@@ -737,7 +738,7 @@ function TwoFactorSection({ mfaEnabled, onStatusChange }: { mfaEnabled: boolean;
 
       {mfaEnabled && showDisableForm && (
         <View className="gap-2">
-          <GlassInput secureTextEntry placeholder="Current password" value={disablePassword} onChangeText={setDisablePassword} />
+          <PasswordInput placeholder="Current password" value={disablePassword} onChangeText={setDisablePassword} />
           <GlassInput placeholder="6-digit authenticator code" value={disableCode} onChangeText={setDisableCode} keyboardType="number-pad" />
           {disableError ? <Text className="text-[#f87171] text-xs">{disableError}</Text> : null}
           <View className="flex-row gap-2">

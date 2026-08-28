@@ -10,6 +10,7 @@ import { fileService } from '@/services/fileService';
 import ThemeCustomizer from './ThemeCustomizer';
 import AvatarCropModal from './AvatarCropModal';
 import { useModalA11y } from '@/lib/useModalA11y';
+import PasswordInput from './PasswordInput';
 
 const MAX_AVATAR_SOURCE_BYTES = 10 * 1024 * 1024; // 10MB - generous for a phone photo, well under server limits
 
@@ -757,30 +758,27 @@ function PasswordChangeSection() {
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-3 p-[0.85rem] bg-[var(--text-primary)]/[0.03] rounded-xl">
       <div className="text-[0.9rem] font-semibold">Change Password</div>
-      <input
-        type="password"
+      <PasswordInput
         required
-        className="glass-input"
+        withLockIcon={false}
         placeholder="Current password"
         value={currentPassword}
         onChange={(e) => setCurrentPassword(e.target.value)}
       />
-      <input
-        type="password"
+      <PasswordInput
         required
+        withLockIcon={false}
         minLength={8}
         maxLength={12}
         pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^A-Za-z0-9]).{8,12}"
         title="8-12 characters, including one uppercase letter, one number, and one special character"
-        className="glass-input"
         placeholder="New password"
         value={newPassword}
         onChange={(e) => setNewPassword(e.target.value)}
       />
-      <input
-        type="password"
+      <PasswordInput
         required
-        className="glass-input"
+        withLockIcon={false}
         placeholder="Confirm new password"
         value={confirmNewPassword}
         onChange={(e) => setConfirmNewPassword(e.target.value)}
@@ -965,10 +963,9 @@ function TwoFactorSection({ mfaEnabled, onStatusChange }: TwoFactorSectionProps)
 
       {mfaEnabled && showDisableForm && (
         <form onSubmit={handleDisable} className="flex flex-col gap-2">
-          <input
-            type="password"
+          <PasswordInput
             required
-            className="glass-input"
+            withLockIcon={false}
             placeholder="Current password"
             value={disablePassword}
             onChange={(e) => setDisablePassword(e.target.value)}

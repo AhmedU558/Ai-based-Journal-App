@@ -5,6 +5,7 @@ import { ArrowRight } from 'lucide-react-native';
 import type { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { GlassPanel } from '@/components/ui/GlassPanel';
 import { GlassInput } from '@/components/ui/GlassInput';
+import { PasswordInput } from '@/components/ui/PasswordInput';
 import { PrimaryButton } from '@/components/ui/PrimaryButton';
 import { MindoraLogo } from '@/components/ui/MindoraLogo';
 import { TurnstileGate } from '@/components/ui/TurnstileGate';
@@ -22,15 +23,25 @@ export default function RegisterScreen({ navigation }: Props) {
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
-  const canSubmit = fullName.trim() && username.trim() && email.trim() && password.trim() && turnstileToken;
+  const canSubmit =
+    fullName.trim() && username.trim() && email.trim() && password.trim() && confirmPassword.trim() && turnstileToken;
 
   const handleSubmit = async () => {
     setError('');
+    // Checked before the CAPTCHA guard, same as the web form: a mismatch is
+    // the user's to fix, and complaining about the CAPTCHA first buries it.
+    // Returning here leaves turnstileToken unspent - nothing was sent - so the
+    // retry reuses it instead of forcing a fresh challenge.
+    if (password !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
     if (!turnstileToken) {
       setError('Please complete the CAPTCHA verification.');
       return;
@@ -87,7 +98,15 @@ export default function RegisterScreen({ navigation }: Props) {
               </View>
               <View>
                 <Text className="text-[#cbd5e1] text-sm font-medium mb-2">Password</Text>
-                <GlassInput secureTextEntry placeholder="••••••••••••" value={password} onChangeText={setPassword} />
+                <PasswordInput placeholder="••••••••••••" value={password} onChangeText={setPassword} />
+              </View>
+              <View>
+                <Text className="text-[#cbd5e1] text-sm font-medium mb-2">Confirm Password</Text>
+                <PasswordInput
+                  placeholder="Re-enter your password"
+                  value={confirmPassword}
+                  onChangeText={setConfirmPassword}
+                />
               </View>
 
               <TurnstileGate action="register" onVerify={setTurnstileToken} resetKey={turnstileResetKey} />
