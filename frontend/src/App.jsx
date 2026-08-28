@@ -4,6 +4,7 @@ import { AlertCircle } from 'lucide-react';
 import Navbar from './components/Navbar';
 import Header from './components/Header';
 import AuthView from './components/AuthView';
+import LandingView from './components/LandingView';
 import Toast from './components/Toast';
 // Lazy-loaded, not eager - none of these render for an unauthenticated
 // visitor (they're either behind the isAuthenticated gate or, for
@@ -368,10 +369,33 @@ export default function App() {
     );
   }
 
+  // Unauthenticated visitors get a real front door at "/" and the sign-in form
+  // at "/login". Both stay eagerly imported: "/" is what a fresh visitor hits,
+  // so lazy-loading it would just move the chunk fetch onto the LCP path that
+  // the lazy-loading above exists to protect. The weight that fix was actually
+  // about (the five modals) is still lazy. Anything else while logged out lands
+  // on /login rather than the landing page, so a bookmarked /dashboard leads
+  // somewhere you can act on instead of a marketing pitch.
   if (!isAuthenticated) {
     return (
       <>
-        <AuthView onLoginSuccess={handleLoginSuccess} onNavigateToDownload={() => navigate('/download')} />
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <LandingView
+                onSignIn={() => navigate('/login')}
+                onGetStarted={() => navigate('/login')}
+                onNavigateToDownload={() => navigate('/download')}
+              />
+            }
+          />
+          <Route
+            path="/login"
+            element={<AuthView onLoginSuccess={handleLoginSuccess} onNavigateToDownload={() => navigate('/download')} />}
+          />
+          <Route path="*" element={<Navigate to="/login" replace />} />
+        </Routes>
         <Toast toast={toast} onClose={() => setToast(null)} />
       </>
     );
