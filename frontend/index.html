@@ -5,15 +5,107 @@
   <meta charset="UTF-8" />
   <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Mindora</title>
+
+  <title>Mindora — AI Journal &amp; Mood Tracker</title>
   <meta name="description"
-    content="Mindora - an AI-powered journaling companion for reflection, mood tracking, and personal growth." />
+    content="A free journaling app that detects your mood as you write, helps you find the words, and shows how you have been feeling over time. Web and Android." />
+  <link rel="canonical" href="https://mindorajournal.com/" />
+  <meta name="theme-color" content="#090d16" />
+  <meta name="color-scheme" content="dark light" />
+
+  <!-- Open Graph / Twitter. Without these a shared link renders as a bare URL
+       with no title, description or image - the SPA body is an empty div, so
+       there is nothing for a preview crawler to fall back on. -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Mindora" />
+  <meta property="og:url" content="https://mindorajournal.com/" />
+  <meta property="og:title" content="Mindora — AI Journal &amp; Mood Tracker" />
+  <meta property="og:description"
+    content="A journal that notices what you missed. Mood detection as you write, AI writing help, and analytics across weeks. Free, no ads, no tracking." />
+  <meta property="og:image" content="https://mindorajournal.com/og-image.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:image:alt" content="Mindora — your thoughts, your story, your AI companion" />
+  <meta property="og:locale" content="en_US" />
+
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Mindora — AI Journal &amp; Mood Tracker" />
+  <meta name="twitter:description"
+    content="A journal that notices what you missed. Mood detection as you write, AI writing help, and analytics across weeks." />
+  <meta name="twitter:image" content="https://mindorajournal.com/og-image.jpg" />
+
   <!-- Google Fonts: Outfit & Inter -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link
     href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap"
     rel="stylesheet">
+
+  <!-- Structured data. Static in the document on purpose: crawlers that do not
+       execute JavaScript (Bing, social previews, the LLM crawlers) see nothing
+       else on this page, since the body is an empty root div until React runs.
+       Deliberately no aggregateRating or review markup - inventing ratings is
+       what earns a structured-data manual action, and Mindora has no real
+       ratings to report yet. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "SoftwareApplication",
+        "@id": "https://mindorajournal.com/#app",
+        "name": "Mindora",
+        "alternateName": "Mindora: AI Journal & Mood",
+        "url": "https://mindorajournal.com/",
+        "description": "A journaling app that detects your mood as you write, helps you rephrase, continue or summarise an entry, and surfaces patterns in how you have been feeling over time.",
+        "applicationCategory": "LifestyleApplication",
+        "applicationSubCategory": "Journaling",
+        "operatingSystem": "Web, Android 7.0+",
+        "image": "https://mindorajournal.com/og-image.jpg",
+        "screenshot": [
+          "https://mindorajournal.com/screens/01-dashboard.webp",
+          "https://mindorajournal.com/screens/02-editor-ai.webp",
+          "https://mindorajournal.com/screens/03-analytics.webp",
+          "https://mindorajournal.com/screens/04-calendar.webp"
+        ],
+        "featureList": [
+          "Automatic mood detection while you write",
+          "AI writing help: rephrase, fix grammar, continue writing, summarise, auto-tag",
+          "Mood analytics, streaks and writing trends",
+          "Calendar view colour-coded by mood",
+          "Full-text search across all entries",
+          "Ask questions about your own journal",
+          "Two-factor authentication",
+          "Offline journaling on Android"
+        ],
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "isAccessibleForFree": true,
+        "publisher": { "@id": "https://mindorajournal.com/#org" }
+      },
+      {
+        "@type": "Organization",
+        "@id": "https://mindorajournal.com/#org",
+        "name": "Mindora",
+        "url": "https://mindorajournal.com/",
+        "logo": "https://mindorajournal.com/og-image.jpg",
+        "email": "aqvionlabs@gmail.com"
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://mindorajournal.com/#website",
+        "url": "https://mindorajournal.com/",
+        "name": "Mindora",
+        "description": "AI journaling and mood tracking for the web and Android.",
+        "publisher": { "@id": "https://mindorajournal.com/#org" },
+        "inLanguage": "en"
+      }
+    ]
+  }
+  </script>
 </head>
 
 <body>
