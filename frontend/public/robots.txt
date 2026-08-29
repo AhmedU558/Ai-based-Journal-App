@@ -1,0 +1,22 @@
+# https://mindorajournal.com/robots.txt
+
+User-agent: *
+Allow: /
+
+# Authenticated app routes. These render only for a signed-in session, so a
+# crawler gets the landing page markup at every one of them - duplicate content
+# with no value to anyone searching. The SPA fallback returns 200 for any path,
+# which is why these are listed explicitly rather than relying on 404s.
+Disallow: /dashboard
+Disallow: /journals
+Disallow: /calendar
+Disallow: /ai-chat
+Disallow: /search
+Disallow: /analytics
+Disallow: /login
+
+# Never crawlable, and not meant to be indexed on its own.
+Disallow: /api/
+Disallow: /turnstile-embed.html
+
+Sitemap: https://mindorajournal.com/sitemap.xml
