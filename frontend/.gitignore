@@ -22,3 +22,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Prerender SSR bundle - built and deleted by prerender/build.mjs, never committed
+prerender/.out
