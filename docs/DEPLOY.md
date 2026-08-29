@@ -25,8 +25,15 @@ nginx serving the built SPA, and proxies `/api/**` on to the gateway. This is
 why `docker-compose.prod.yml` binds the frontend to `127.0.0.1` rather than
 `0.0.0.0` — the container must not claim the public port that host nginx owns.
 
-The nginx site config lives at `/etc/nginx/sites-enabled/` and is **not** in
-this repo. Neither is `/opt/mindora/.env`, which holds every production secret.
+The nginx site config lives at `/etc/nginx/sites-enabled/`. The server is
+authoritative, but a reference copy is kept at
+[nginx/mindorajournal.com.conf](nginx/mindorajournal.com.conf) — re-copy it in
+the same commit whenever you change the live one, or it goes stale. See
+[nginx/README.md](nginx/README.md) for what the blocks do and how to apply a
+change without taking the site down.
+
+`/opt/mindora/.env` is **not** in this repo and must not be — it holds every
+production secret.
 
 ## Before your first deploy
 
